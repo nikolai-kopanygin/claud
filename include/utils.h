@@ -1,6 +1,10 @@
 #ifndef __UTILS_H
 #define __UTILS_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef ARRAY_SIZE
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(*(a)))
 #endif
@@ -59,5 +63,9 @@ void set_log_level(int val);
  * @return the value.
  */
 int get_log_level();
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

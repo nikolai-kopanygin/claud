@@ -1,5 +1,13 @@
+#ifndef __COMMAND_H
+#define __COMMAND_H
+
 #include <stdbool.h>
 #include <sys/types.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct mail_ru_cloud;
 struct file_list;
 
@@ -28,3 +36,9 @@ int command_move(struct mail_ru_cloud *c, struct command *cmd);
 int command_copy(struct mail_ru_cloud *c, struct command *cmd);
 int file_stat(struct mail_ru_cloud *c, const char *path, struct file_list *finfo);
 void file_list_cleanup(struct file_list *finfo);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* __COMMAND_H */

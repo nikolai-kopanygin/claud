@@ -1,3 +1,10 @@
+#ifndef __MAIL_RU_CLOUD_H
+#define __MAIL_RU_CLOUD_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct CURL;
 struct interface;
 
@@ -20,3 +27,9 @@ struct mail_ru_cloud *new_cloud(const char *user,
 void delete_cloud(struct mail_ru_cloud *c);
 
 int get_shard_info(struct mail_ru_cloud *c);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* __MAIL_RU_CLOUD_H */

@@ -1,4 +1,11 @@
+#ifndef __TYPES_H_
+#define __TYPES_H_
+
 #include <curl/curl.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 // AuthToken unmarshal Auth json data.
 struct auth_token {
@@ -82,3 +89,9 @@ struct mail_ru_cloud *new_cloud(const char *user,
 				const char *domain,
 				int *error);
 void delete_cloud(struct mail_ru_cloud *c);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* __TYPES_H_ */

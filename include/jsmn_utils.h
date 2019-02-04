@@ -1,4 +1,11 @@
+#ifndef __JSMN_UTILS_H
+#define __JSMN_UTILS_H
+
 #include "jsmn.h"
+
+#ifdef __cplusplus
+}
+#endif
 
 size_t get_json_element_count(jsmntok_t *t);
 jsmntok_t *find_json_element_by_name(const char *js, jsmntok_t *t,
@@ -13,3 +20,9 @@ int get_json_int_by_name(const char *js, jsmntok_t *t,
 			 size_t count, const char *name);
 char *get_json_string_by_name(const char *js, jsmntok_t *t,
 			      size_t count, const char *name);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* __JSMN_UTILS_H */
