@@ -13,10 +13,10 @@ ifeq ($(PREFIX),)
     PREFIX := /usr/local
 endif
 
-_DEPS = types.h utils.h command.h mail_ru_cloud.h http_api.h jsmn.h jsmn_utils.h
+_DEPS = types.h utils.h command.h cld.h
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 
-_OBJ = main.o command.o command_handlers.o
+_OBJ = main.o command.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 $(ODIR)/%.o: %.c $(DEPS)

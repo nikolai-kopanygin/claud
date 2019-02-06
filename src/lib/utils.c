@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <ctype.h>
 #include "utils.h"
 
 /**
@@ -11,24 +12,6 @@
 static int log_level = LOG_ERROR;
 
 static FILE *log_fp = NULL;
-
-/**
- * Extract the basename of  file from its pathname
- * and copy it to a newly allocated string.
- * @param pathname - the file pathname;
- * @return the basename string, or NULL if allocation failed.
- */
-char *copy_basename(const char *pathname)
-{
-	char *filename;
-	char *tmp = strdup(pathname);
-	if (!tmp)
-		return NULL;
-	filename = strdup(basename(tmp));
-	free(tmp);
-	
-	return filename;
-}
 
 static const char *level_names[] = { "ERROR", "WARN", "INFO", "DEBUG" };
 
@@ -112,4 +95,48 @@ void set_log_level(int val)
 int get_log_level()
 {
 	return log_level;
+}
+
+/**
+ * Strip whitespace off of both ends of a string.
+ * NOTE: the original string is modified.
+ * @param str - the string to trim.
+ * @return - a pointer to the trimmed string.
+ */
+char *trimwhitespace(char *str)
+{
+  char *end;
+
+  // Trim leading space
+  while(isspace((unsigned char)*str)) str++;
+
+  if(*str == 0)  // All spaces?
+    return str;
+
+  // Trim trailing space
+  end = str + strlen(str) - 1;
+  while(end > str && isspace((unsigned char)*end)) end--;
+
+  // Write new null terminator character
+  end[1] = '\0';
+
+  return str;
+}
+
+/**
+ * Extract the basename of  file from its pathname
+ * and copy it to a newly allocated string.
+ * @param pathname - the file pathname;
+ * @return the basename string, or NULL if allocation failed.
+ */
+char *copy_basename(const char *pathname)
+{
+	char *filename;
+	char *tmp = strdup(pathname);
+	if (!tmp)
+		return NULL;
+	filename = strdup(basename(tmp));
+	free(tmp);
+	
+	return filename;
 }

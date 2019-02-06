@@ -11,9 +11,8 @@
 #include <unistd.h>
 
 #include "types.h"
-#include "command.h"
 #include "http_api.h"
-#include "mail_ru_cloud.h"
+#include "cld.h"
 #include "jsmn_utils.h"
 #include "utils.h"
 
@@ -124,7 +123,7 @@ static int parse_file_list(const char *js, jsmntok_t *tok,
  * @param finfo - a pointer to the file_list struture.
  * @result 0 for success, or error code.
  */
-static int get_file_list(struct mail_ru_cloud *c, const char *path, struct file_list *finfo)
+static int get_file_list(struct cld *c, const char *path, struct file_list *finfo)
 {
 	int res;
 	jsmn_parser p;
@@ -166,16 +165,16 @@ static int get_file_list(struct mail_ru_cloud *c, const char *path, struct file_
 	return res;
 }
 
-int command_print_file_list(struct mail_ru_cloud *c, struct command *cmd)
+int cld_print_file_list(struct cld *c, const char *path)
 {
 	int res;
 	struct file_list finfo = { 0 };
-	if (get_file_list(c, cmd->args[0], &finfo)) {
+	if (get_file_list(c, path, &finfo)) {
 		log_error("Could not read file list\n");
 		return 1;
 	}
 	res = print_file_list(&finfo);
-	file_list_cleanup(&finfo);
+	cld_file_list_cleanup(&finfo);
 	return res;
 }
 
@@ -186,7 +185,7 @@ static void list_item_cleanup(struct list_item *li)
 	free(li->name);
 }
 
-void file_list_cleanup(struct file_list *finfo)
+void cld_file_list_cleanup(struct file_list *finfo)
 {
 	size_t i;
 	if (!finfo)
@@ -200,33 +199,7 @@ void file_list_cleanup(struct file_list *finfo)
 	memset(finfo, 0, sizeof(*finfo));
 }
 
-static int print_file_stat(struct file_list *finfo)
-{
-	struct tm tm = { 0 };
-	char time_str[80];
-
-	if (!finfo)
-		return 1;
-	
-	if (!gmtime_r(&finfo->body.mtime, &tm)) {
-		log_error("Wrong time format\n");
-		return 1;
-	}
-
-	if (!strftime(time_str, sizeof(time_str), "%F %T", &tm)) {
-		log_error("Wrong time format\n");
-		return 1;
-	}	
-	
-	printf("%-6s %11ld %-12s %-20s hash:%s\n",
-		finfo->body.kind,
-		finfo->body.size,
-		time_str,
-		finfo->body.name,
-		finfo->body.hash);
-}
-
-int parse_file_stat(const char *js, jsmntok_t *tok, struct file_list *finfo)
+static int parse_file_stat(const char *js, jsmntok_t *tok, struct file_list *finfo)
 {
 	jsmntok_t *body;
 	size_t count, body_count;
@@ -246,7 +219,7 @@ int parse_file_stat(const char *js, jsmntok_t *tok, struct file_list *finfo)
 	return 0;
 }
 
-int file_stat(struct mail_ru_cloud *c, const char *path, struct file_list *finfo)
+int cld_file_stat(struct cld *c, const char *path, struct file_list *finfo)
 {
 	int res;
 	jsmn_parser p;
@@ -287,17 +260,3 @@ int file_stat(struct mail_ru_cloud *c, const char *path, struct file_list *finfo
 	memory_struct_cleanup(&chunk);
 	return res;
 }
-
-int command_stat(struct mail_ru_cloud *c, struct command *cmd)
-{
-	int res;
-	struct file_list finfo = { 0 };
-	if (file_stat(c, cmd->args[0], &finfo)) {
-		log_error("Could not read file info\n");
-		return 1;
-	}
-	res = print_file_stat(&finfo);
-	file_list_cleanup(&finfo);
-	return res;
-}
-

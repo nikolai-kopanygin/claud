@@ -4,14 +4,14 @@
 #include <curl/curl.h>
 #include "types.h"
 #include "http_api.h"
-#include "mail_ru_cloud.h"
+#include "cld.h"
 #include "utils.h"
 
 #define COOKIE_FILE "/tmp/cookies.txt"
 #define LOGIN_URL "https://auth.mail.ru/cgi-bin/auth"
 #define SDC_URL "https://auth.mail.ru/sdc?from=https://cloud.mail.ru/home"
 
-static int login(struct mail_ru_cloud *c,
+static int login(struct cld *c,
 		 const char *user,
 		 const char *password,
 		 const char *domain)
@@ -91,12 +91,12 @@ static char *get_token(CURL *curl)
 
 // NewCloud authenticates with mail.ru and returns a new object associated with user account.
 // domain parameter should be "mail.ru"
-struct mail_ru_cloud *new_cloud(const char *user,
+struct cld *new_cloud(const char *user,
 				const char *password,
 				const char *domain,
 				int *error)
 {
-	struct mail_ru_cloud *c;
+	struct cld *c;
 	CURL *curl;
 	
 	*error = 1; // by default
@@ -137,7 +137,7 @@ cleanup:
 	return NULL;
 }
 
-void delete_cloud(struct mail_ru_cloud *c)
+void delete_cloud(struct cld *c)
 {
 	if (get_req(c->curl, NULL, "http://win.mail.ru/cgi-bin/logout"))
 		log_error("Logout failed\n");

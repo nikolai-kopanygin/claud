@@ -13,13 +13,12 @@
 #include <ctype.h>
 
 #include "types.h"
-#include "command.h"
 #include "http_api.h"
-#include "mail_ru_cloud.h"
+#include "cld.h"
 #include "jsmn_utils.h"
 #include "utils.h"
 
-static int add_file(struct mail_ru_cloud *c,
+static int add_file(struct cld *c,
 		    const char *dst,
 		    const char *hash,
 		    const char *size)
@@ -44,27 +43,7 @@ static int add_file(struct mail_ru_cloud *c,
 	
 }
 
-char *trimwhitespace(char *str)
-{
-  char *end;
-
-  // Trim leading space
-  while(isspace((unsigned char)*str)) str++;
-
-  if(*str == 0)  // All spaces?
-    return str;
-
-  // Trim trailing space
-  end = str + strlen(str) - 1;
-  while(end > str && isspace((unsigned char)*end)) end--;
-
-  // Write new null terminator character
-  end[1] = '\0';
-
-  return str;
-}
-
-static int upload_file_part(struct mail_ru_cloud *c, const char *dst, FILE *f,
+static int upload_file_part(struct cld *c, const char *dst, FILE *f,
 			    size_t length, int part)
 {
 	int res = 0;
@@ -116,14 +95,11 @@ out:
 	return res;
 }
 
-int command_upload(struct mail_ru_cloud *c, struct command *cmd)
+int cld_upload(struct cld *c, const char *src, const char *dst)
 {
 	int res = 0;
 	FILE *f;
 	struct stat sb;
-	const char *src = cmd->args[0];
-	const char *dst = cmd->args[1];
-	printf("%s\n%s\n", src, dst);
 	
 	const char *mp_str = ".Multifile-Part";
 	char *mpbuf = malloc(strlen(src) + strlen(mp_str) + 10);
@@ -132,7 +108,7 @@ int command_upload(struct mail_ru_cloud *c, struct command *cmd)
 		return 1;
 	}
 
-	if (get_shard_info(c))
+	if (cld_get_shard_info(c))
 		return 1;
 	
 	if (!(f = fopen(src, "r"))) {
@@ -155,8 +131,6 @@ int command_upload(struct mail_ru_cloud *c, struct command *cmd)
 				? MAX_FILE_SIZE
 				: sb.st_size % MAX_FILE_SIZE;
 			sprintf(mpbuf, "%s%s%02d", dst, mp_str, part);
-			//if (part == 0)
-			//	continue;
 			res = upload_file_part(c, mpbuf, f, n, part);
 		}
 	}

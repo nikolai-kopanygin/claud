@@ -29,19 +29,20 @@
 extern "C" {
 #endif
 
-struct mail_ru_cloud;
+struct cld;
 struct file_list;
 struct command;
 
 /** Command handler function type */
-typedef int(cmd_handler_fn)(struct mail_ru_cloud *c, struct command *cmd);
+typedef int(cmd_handler_fn)(struct command *cmd);
 
 /** Maximum number of arguments in a command */
 #define CMD_MAX_ARGS 2
 
 /** This is a descriptor for the Mail.Ru Cloud command */
 struct command {
-	cmd_handler_fn *handle;		/**< Handler function ptr */
+	struct cld *cld;	/**< Cloud ptr */
+	cmd_handler_fn *handle;		/**< Handler ptr */
 	char *args[CMD_MAX_ARGS];	/**< Command arguments */
 	size_t nr_args;			/**< Number of command arguments */
 	int err;			/**< Error code */
@@ -64,16 +65,7 @@ int command_parse(struct command *cmd, char *args[], size_t nr_args);
  */
 void command_cleanup(struct command *cmd);
 
-int command_print_file_list(struct mail_ru_cloud *c, struct command *cmd);
-int command_stat(struct mail_ru_cloud *c, struct command *cmd);
-int command_remove(struct mail_ru_cloud *c, struct command *cmd);
-int command_mkdir(struct mail_ru_cloud *c, struct command *cmd);
-int command_cat(struct mail_ru_cloud *c, struct command *cmd);
-int command_get(struct mail_ru_cloud *c, struct command *cmd);
-int command_upload(struct mail_ru_cloud *c, struct command *cmd);
-int command_move(struct mail_ru_cloud *c, struct command *cmd);
-int command_copy(struct mail_ru_cloud *c, struct command *cmd);
-int file_stat(struct mail_ru_cloud *c, const char *path, struct file_list *finfo);
+int file_stat(struct cld *c, const char *path, struct file_list *finfo);
 void file_list_cleanup(struct file_list *finfo);
 
 #ifdef __cplusplus

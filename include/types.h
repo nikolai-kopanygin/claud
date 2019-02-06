@@ -84,11 +84,11 @@ struct shard_info {
 	int status;
 };
 
-struct mail_ru_cloud *new_cloud(const char *user,
+struct cld *new_cloud(const char *user,
 				const char *password,
 				const char *domain,
 				int *error);
-void delete_cloud(struct mail_ru_cloud *c);
+void delete_cloud(struct cld *c);
 
 #ifdef __cplusplus
 }

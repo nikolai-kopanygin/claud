@@ -25,7 +25,7 @@ For Debian-bases distributions, you can install it like this:
 
 # Uninstall
 
-    make uninstall
+    sudo make uninstall
 
 
 

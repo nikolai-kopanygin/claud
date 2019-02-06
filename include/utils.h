@@ -9,14 +9,6 @@ extern "C" {
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(*(a)))
 #endif
 
-/**
- * Extract the basename of  file from its pathname
- * and copy it to a newly allocated string.
- * @param pathname - the file pathname;
- * @return the basename string, or NULL if allocation failed.
- */
-char *copy_basename(const char *pathname);
-
 /* Logging */
 
 /**
@@ -69,6 +61,22 @@ void set_log_level(int val);
  * @return the value.
  */
 int get_log_level();
+
+/**
+ * Extract the basename of  file from its pathname
+ * and copy it to a newly allocated string.
+ * @param pathname - the file pathname;
+ * @return the basename string, or NULL if allocation failed.
+ */
+char *copy_basename(const char *pathname);
+
+/**
+ * Strip whitespace off of both ends of a string.
+ * NOTE: the original string is modified.
+ * @param str - the string to trim.
+ * @return - a pointer to the trimmed string.
+ */
+char *trimwhitespace(char *str);
 
 #ifdef __cplusplus
 }

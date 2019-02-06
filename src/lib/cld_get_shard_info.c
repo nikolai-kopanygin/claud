@@ -3,7 +3,7 @@
 #include <curl/curl.h>
 #include "types.h"
 #include "http_api.h"
-#include "mail_ru_cloud.h"
+#include "cld.h"
 #include "jsmn_utils.h"
 #include "utils.h"
 
@@ -107,7 +107,7 @@ static void shard_info_cleanup(struct shard_info *s)
 	free(s->body.get.items);
 }
 
-int get_shard_info(struct mail_ru_cloud *c)
+int cld_get_shard_info(struct cld *c)
 {
 	int res;
 	jsmn_parser p;

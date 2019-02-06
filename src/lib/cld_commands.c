@@ -5,13 +5,12 @@
 #include <stdlib.h>
 #include <libgen.h>
 #include "types.h"
-#include "command.h"
 #include "http_api.h"
-#include "mail_ru_cloud.h"
+#include "cld.h"
 #include "jsmn_utils.h"
 #include "utils.h"
 
-int c_remove(struct mail_ru_cloud *c, const char *path)
+int cld_remove(struct cld *c, const char *path)
 {
 	int res;
 	const char *names[] = { "token", "api", "home" };
@@ -31,12 +30,7 @@ int c_remove(struct mail_ru_cloud *c, const char *path)
 	return res;
 }
 
-int command_remove(struct mail_ru_cloud *c, struct command *cmd)
-{
-	return c_remove(c, cmd->args[0]);
-}
-
-static int c_mkdir(struct mail_ru_cloud *c, const char *path)
+int cld_mkdir(struct cld *c, const char *path)
 {
 	int res;
 	const char *names[] = { "token", "api", "home", "conflict" };
@@ -56,12 +50,7 @@ static int c_mkdir(struct mail_ru_cloud *c, const char *path)
 	return res;
 }
 
-int command_mkdir(struct mail_ru_cloud *c, struct command *cmd)
-{
-	return c_mkdir(c, cmd->args[0]);
-}
-
-static int c_move_a(struct mail_ru_cloud *c, const char *src,
+static int c_move_a(struct cld *c, const char *src,
 		  const char *target_dir)
 {
 	int res;
@@ -77,7 +66,7 @@ static int c_move_a(struct mail_ru_cloud *c, const char *src,
 	return res;
 }
 
-static int c_rename(struct mail_ru_cloud *c, const char *src,
+static int c_rename(struct cld *c, const char *src,
 		  const char *target_name)
 {
 	int res;
@@ -95,41 +84,41 @@ static int c_rename(struct mail_ru_cloud *c, const char *src,
 
 //TODO: This must be reworked to distinguish between files and
 // folders in dst path.
-int command_move(struct mail_ru_cloud *c, struct command *cmd)
+int cld_move(struct cld *c, const char *src, const char *dst)
 {
 	int res = 0;
 	static const char *tmp_dir = "/__tmrc";
-	char *src = strdup(cmd->args[0]);
-	if (!src) {
+	char *src_copy = strdup(src);
+	if (!src_copy) {
 		log_error("Could not allocate memory\n");
 		return 1;
 	}
-	char *dst = strdup(cmd->args[1]);
-	if (!dst) {
+	char *dst_copy = strdup(dst);
+	if (!dst_copy) {
 		log_error("Could not allocate memory\n");
-		free(src);
+		free(src_copy);
 		return 1;
 	}
-	char *src_dir = dirname(src);
-	char *src_base = basename(src);
-	char *dst_dir = dirname(dst);
-	char *dst_base = basename(dst);
+	char *src_dir = dirname(src_copy);
+	char *src_base = basename(src_copy);
+	char *dst_dir = dirname(dst_copy);
+	char *dst_base = basename(dst_copy);
 	char *src_tmp = NULL;
 	char *dst_tmp = NULL;
 
 	if (!strcmp(src_dir, dst_dir)) {
-		res = c_rename(c, cmd->args[0], dst_base);
+		res = c_rename(c, src, dst_base);
 		goto cleanup;
 	}
 	if (!strcmp(src_base, dst_base)) {
-		res = c_move_a(c, cmd->args[0], dst_dir);
+		res = c_move_a(c, src, dst_dir);
 		goto cleanup;
 	}
-	if (c_mkdir(c, tmp_dir)) {
+	if (cld_mkdir(c, tmp_dir)) {
 		res = 1;
 		goto cleanup;
 	}
-	if (c_move_a(c, cmd->args[0], tmp_dir)) {
+	if (c_move_a(c, src, tmp_dir)) {
 		res = 1;
 		goto rm_tmp_dir;
 	}
@@ -151,20 +140,20 @@ int command_move(struct mail_ru_cloud *c, struct command *cmd)
 	}
 	
 rm_tmp_dir:
-	if (c_remove(c, tmp_dir))
+	if (cld_remove(c, tmp_dir))
 		res = 1;
 cleanup:
 	free(dst_tmp);
 	free(src_tmp);
-	free(dst);
-	free(src);
+	free(dst_copy);
+	free(src_copy);
 	return res;
 }
 
 // CopyA method is the direct call to api url.
 // It does not support rename. src is full source file path,
 // targetDir is the directory to copy file to.
-static int c_copy_a(struct mail_ru_cloud *c, const char *src,
+static int c_copy_a(struct cld *c, const char *src,
 		  const char *target_dir)
 {
 	int res;
@@ -184,36 +173,36 @@ static int c_copy_a(struct mail_ru_cloud *c, const char *src,
 // folders in dst path.
 // Copy is convenient method to move files at the mail.ru cloud.
 // src and dst should be the full source and destination file paths.
-int command_copy(struct mail_ru_cloud *c, struct command *cmd)
+int cld_copy(struct cld *c, const char *src, const char *dst)
 {
 	int res = 0;
 	static const char *tmp_dir = "/__tmrc";
-	char *src = strdup(cmd->args[0]);
-	if (!src) {
+	char *src_copy = strdup(src);
+	if (!src_copy) {
 		log_error("Could not allocate memory\n");
 		return 1;
 	}
-	char *dst = strdup(cmd->args[1]);
-	if (!dst) {
+	char *dst_copy = strdup(dst);
+	if (!dst_copy) {
 		log_error("Could not allocate memory\n");
-		free(src);
+		free(src_copy);
 		return 1;
 	}
-	char *src_dir = dirname(src);
-	char *src_base = basename(src);
-	char *dst_dir = dirname(dst);
-	char *dst_base = basename(dst);
+	char *src_dir = dirname(src_copy);
+	char *src_base = basename(src_copy);
+	char *dst_dir = dirname(dst_copy);
+	char *dst_base = basename(dst_copy);
 	char *src_tmp = NULL;
 	char *dst_tmp = NULL;
 	
 	printf("src: dir '%s' base '%s'\n", src_dir, src_base);
 	printf("dst: dir '%s' base '%s'\n", dst_dir, dst_base);
 
-	if (c_mkdir(c, tmp_dir)) {
+	if (cld_mkdir(c, tmp_dir)) {
 		res = 1;
 		goto cleanup;
 	}
-	if (c_copy_a(c, cmd->args[0], tmp_dir)) {
+	if (c_copy_a(c, src, tmp_dir)) {
 		res = 1;
 		goto rm_tmp_dir;
 	}
@@ -236,13 +225,13 @@ int command_copy(struct mail_ru_cloud *c, struct command *cmd)
 	}
 	
 rm_tmp_dir:
-	if (c_remove(c, tmp_dir))
+	if (cld_remove(c, tmp_dir))
 		res = 1;
 cleanup:
 	free(dst_tmp);
 	free(src_tmp);
-	free(dst);
-	free(src);
+	free(dst_copy);
+	free(src_copy);
 	return res;
 }
 

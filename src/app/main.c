@@ -25,7 +25,7 @@
 #include <string.h>
 #include <curl/curl.h>
 
-#include "mail_ru_cloud.h"
+#include "cld.h"
 #include "command.h"
 #include "utils.h"
 
@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
 	int index;
 	int err;
 	struct command cmd = { 0, };
-	struct mail_ru_cloud *c;
+	struct cld *c;
 	
 	/* parse options */
 	static struct option loptions[] = {
@@ -107,7 +107,8 @@ int main(int argc, char *argv[])
 	c = new_cloud(getenv("MAILRU_USER"), getenv("MAILRU_PASSWORD"),
 		      "mail.ru", &err);
 	if (c) {
-		cmd.handle(c, &cmd);
+		cmd.cld = c;
+		cmd.handle(&cmd);
 		err = cmd.err;
 		delete_cloud(c);
 	} else {

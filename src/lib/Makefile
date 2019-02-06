@@ -14,11 +14,11 @@ ifeq ($(PREFIX),)
 	PREFIX := /usr/local
 endif
 
-_DEPS = types.h utils.h command.h mail_ru_cloud.h http_api.h jsmn.h jsmn_utils.h
+_DEPS = types.h utils.h cld.h http_api.h jsmn.h jsmn_utils.h
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 
-_OBJ = utils.o command_list.o command_get.o command_upload.o \
-client.o get_shard_info.o jsmn.o jsmn_utils.o http_api.o
+_OBJ = utils.o cld_commands.o cld_list.o cld_get.o cld_upload.o \
+cld.o cld_get_shard_info.o jsmn.o jsmn_utils.o http_api.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 $(ODIR)/%.o: %.c $(DEPS)

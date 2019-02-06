@@ -2,10 +2,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <unistd.h>
 #include "utils.h"
 #include "command.h"
+#include "types.h"
+#include "cld.h"
 
-struct mail_ru_cloud;
 struct file_list;
 
 static const char* ERROR_FILE_NOT_SPEC = "File not specified\n";
@@ -14,6 +16,89 @@ static const char* ERROR_FILE_DIR_NOT_SPEC = "File or direcory not specified\n";
 static const char* ERROR_FEW_ARGS = "Not enough arguments\n";
 static const char* ERROR_ALLOC_ARGS = "Could not allocate memory for arguments\n";
 static const char* ERROR_WRONG_CMD = "Wrong command\n";
+
+static int command_print_file_list(struct command *cmd)
+{
+	return cld_print_file_list(cmd->cld, cmd->args[0]);
+}
+
+static int print_file_stat(struct file_list *finfo)
+{
+	struct tm tm = { 0 };
+	char time_str[80];
+
+	if (!finfo)
+		return 1;
+	
+	if (!gmtime_r(&finfo->body.mtime, &tm)) {
+		log_error("Wrong time format\n");
+		return 1;
+	}
+
+	if (!strftime(time_str, sizeof(time_str), "%F %T", &tm)) {
+		log_error("Wrong time format\n");
+		return 1;
+	}	
+	
+	printf("%-6s %11ld %-12s %-20s hash:%s\n",
+		finfo->body.kind,
+		finfo->body.size,
+		time_str,
+		finfo->body.name,
+		finfo->body.hash);
+}
+
+static int command_stat(struct command *cmd)
+{
+	int res;
+	struct file_list finfo = { 0 };
+	if (cld_file_stat(cmd->cld, cmd->args[0], &finfo)) {
+		log_error("Could not read file info\n");
+		return 1;
+	}
+	res = print_file_stat(&finfo);
+	cld_file_list_cleanup(&finfo);
+	return res;
+}
+
+static int command_remove(struct command *cmd)
+{
+	return cld_remove(cmd->cld, cmd->args[0]);
+}
+
+static int command_mkdir(struct command *cmd)
+{
+	return cld_mkdir(cmd->cld, cmd->args[0]);
+}
+
+/**
+ * Cat file at mail.ru cloud.
+/* cmd->args[0] is the full file path.
+ */
+static int command_cat(struct command *cmd)
+{
+	return cld_get_part(cmd->cld, STDOUT_FILENO, cmd->args[0]);
+}
+
+static int command_get(struct command *cmd)
+{
+	return cld_get(cmd->cld, cmd->args[0], cmd->args[1]);
+}
+
+static int command_upload(struct command *cmd)
+{
+	return cld_upload(cmd->cld, cmd->args[0], cmd->args[1]);
+}
+
+static int command_move(struct command *cmd)
+{
+	return cld_move(cmd->cld, cmd->args[0], cmd->args[1]);
+}
+
+static int command_copy(struct command *cmd)
+{
+	return cld_copy(cmd->cld, cmd->args[0], cmd->args[1]);
+}
 
 static int parse_args(struct command *cmd, char *args[], int nr_args,
 		      const char *msg_few_args)

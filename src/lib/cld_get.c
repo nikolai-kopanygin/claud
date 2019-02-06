@@ -10,14 +10,12 @@
 #include <unistd.h>
 
 #include "types.h"
-#include "command.h"
 #include "http_api.h"
-#include "mail_ru_cloud.h"
+#include "cld.h"
 #include "jsmn_utils.h"
 #include "utils.h"
 
-static int get_file_part(struct mail_ru_cloud *c, int fd,
-			 const char *src)
+int cld_get_part(struct cld *c, int fd, const char *src)
 {
 	int res = 0;
 	jsmn_parser p;
@@ -26,7 +24,7 @@ static int get_file_part(struct mail_ru_cloud *c, int fd,
 	struct memory_struct chunk;
 	char *url;
 
-	if (get_shard_info(c))
+	if (cld_get_shard_info(c))
 		return 1;
 	
 	url = malloc(strlen(c->shard.get) + strlen(src) + 1);
@@ -54,12 +52,10 @@ static int get_file_part(struct mail_ru_cloud *c, int fd,
 	return res;
 }
 
-int command_get(struct mail_ru_cloud *c, struct command *cmd)
+int cld_get(struct cld *c, const char *src, const char *dst)
 {
 	int res;
 	int fd;
-	const char *src = cmd->args[0];
-	const char *dst = cmd->args[1];
 	printf("%s\n%s\n", src, dst);
 	const char *mp_str = ".Multifile-Part";
 	bool mpart = false;
@@ -72,10 +68,10 @@ int command_get(struct mail_ru_cloud *c, struct command *cmd)
 		return 1;
 	}
 
-	if ((res = file_stat(c, src, &finfo))) {
-		file_list_cleanup(&finfo);
+	if ((res = cld_file_stat(c, src, &finfo))) {
+		cld_file_list_cleanup(&finfo);
 		sprintf(mpbuf, "%s%s%02d", src,mp_str, 0);
-		res = file_stat(c, mpbuf, &finfo);
+		res = cld_file_stat(c, mpbuf, &finfo);
 		mpart = true;
 	}
 	if (res)
@@ -89,10 +85,10 @@ int command_get(struct mail_ru_cloud *c, struct command *cmd)
 	if (mpart) {
 		int i;
 		for (i = 0;; i++) {
-			file_list_cleanup(&finfo);
+			cld_file_list_cleanup(&finfo);
 			sprintf(mpbuf, "%s%s%02d", src,mp_str, i);
-			if (!(res = file_stat(c, mpbuf, &finfo))) {
-				if ((res = get_file_part(c, fd, mpbuf))) {
+			if (!(res = cld_file_stat(c, mpbuf, &finfo))) {
+				if ((res = cld_get_part(c, fd, mpbuf))) {
 					log_error("Could not get file\n");
 					break;
 				}
@@ -105,7 +101,7 @@ int command_get(struct mail_ru_cloud *c, struct command *cmd)
 			
 		}
 	} else {
-		res = get_file_part(c, fd, src);
+		res = cld_get_part(c, fd, src);
 	}
 
 out_close:
@@ -113,14 +109,7 @@ out_close:
 		log_error("Failed to close file\n");
 	}
 out:
-	file_list_cleanup(&finfo);	
+	cld_file_list_cleanup(&finfo);	
 	free(mpbuf);
 	return res;
-}
-
-// Cat file at mail.ru cloud.
-// cmd->args[0] is the full file path.
-int command_cat(struct mail_ru_cloud *c, struct command *cmd)
-{
-	return get_file_part(c, STDOUT_FILENO, cmd->args[0]);
 }
