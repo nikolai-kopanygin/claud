@@ -83,6 +83,13 @@ static int parse_args_put(struct command *cmd, char *args[], size_t nr_args)
 	return 0;
 }
 
+/**
+ * Parse the parameters of the program and fill in the command descriptor.
+ * @param cmd - the command descriptor;
+ * @param args - the parameters;
+ * @param nr_args - the number of parameters;
+ * @return 0 for success, or error code.
+ */
 int command_parse(struct command *cmd, char *args[], size_t nr_args)
 {
 	int err = 0;
@@ -132,6 +139,10 @@ int command_parse(struct command *cmd, char *args[], size_t nr_args)
 	return err;
 }
 
+/**
+ * Free the resources allocated for the command.
+ * @param cmd - the command descriptor.
+ */
 void command_cleanup(struct command *cmd)
 {
 	int i;

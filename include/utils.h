@@ -30,6 +30,12 @@ enum log_levels {
 };
 
 /**
+ * Initialize the logger with a file pointer (e.g., stderr).
+ * @param fp - the file pointer for logging.
+ */
+void init_log(FILE *fp);
+
+/**
  * Generic log message function, use with warpper macros.
  * @param level - the message severity level;
  * @param file - the source file name;

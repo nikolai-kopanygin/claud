@@ -68,6 +68,8 @@ int main(int argc, char *argv[])
 		{0,0,0,0}
 	};
 	
+	init_log(stderr);
+	
 	while(1) {
 		int option_index = 0;
 		int opt = getopt_long (argc, argv, "hprv:", 

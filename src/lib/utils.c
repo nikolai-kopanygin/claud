@@ -10,6 +10,8 @@
  */
 static int log_level = LOG_ERROR;
 
+static FILE *log_fp = NULL;
+
 /**
  * Extract the basename of  file from its pathname
  * and copy it to a newly allocated string.
@@ -31,6 +33,15 @@ char *copy_basename(const char *pathname)
 static const char *level_names[] = { "ERROR", "WARN", "INFO", "DEBUG" };
 
 /**
+ * Initialize the logger with a file pointer (e.g., stderr).
+ * @param fp - the file pointer for logging.
+ */
+void init_log(FILE *fp)
+{
+	log_fp = fp;
+}
+
+/**
  * Generic log message function, use with warpper macros.
  * @param level - the message severity level;
  * @param file - the source file name;
@@ -44,6 +55,9 @@ void log_message(int level, const char *file, int line, const char *fmt, ...)
 	int size = 100;     /* Guess we need no more than 100 bytes */
 	char *p, *np;
 	va_list ap;
+	
+	if (!log_fp)
+		return;
 
 	if (log_level < level || level > LOG_DEBUG || level < LOG_ERROR)
 		return;
@@ -75,7 +89,7 @@ void log_message(int level, const char *file, int line, const char *fmt, ...)
 		}
 	}
 
-	fprintf(stderr, "%s [%s:%d] %s", level_names[level], file, line, p);
+	fprintf(log_fp, "%s [%s:%d] %s", level_names[level], file, line, p);
 	free(p);
 }
 

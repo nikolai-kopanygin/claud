@@ -6,17 +6,27 @@ Implementation of [mail.ru cloud](https://cloud.mail.ru/) API.
 The functionality is loosely based on the [GoMailRuCloud](https://github.com/sergevs/GoMailRuCloud) project.
 This project embeds the code of the [JSMN](https://github.com/zserge/jsmn) project .
 
-# Installation & Usage
+# Prerequisites
+
+To build the code, you'll need the libcurl development package.
+For Debian-bases distributions, you can install it like this:
 
     sudo apt install libcurl-dev
+
+# Installation & Usage
+
     git clone https://github.com/nikolai-kopanygin/claud
     cd claud
-    cd src
-    mkdir obj
     make
+    sudo make install
     export MAILRU_USER=<your mail.ru username>
     export MAILRU_PASSWORD=<your mail.ru password>
-    ./claud --help
+    claud --help
+
+# Uninstall
+
+    make uninstall
+
 
 
 # API reference
