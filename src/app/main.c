@@ -25,9 +25,9 @@
 #include <string.h>
 #include <curl/curl.h>
 
-#include "cld.h"
+#include <claud/utils.h>
+#include <claud/cld.h>
 #include "command.h"
-#include "utils.h"
 
 const char *program_name;
 

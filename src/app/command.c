@@ -3,10 +3,10 @@
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
-#include "utils.h"
+#include <claud/utils.h>
+#include <claud/types.h>
+#include <claud/cld.h>
 #include "command.h"
-#include "types.h"
-#include "cld.h"
 
 struct file_list;
 

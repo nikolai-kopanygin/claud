@@ -10,11 +10,11 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#include "types.h"
-#include "http_api.h"
-#include "cld.h"
-#include "jsmn_utils.h"
-#include "utils.h"
+#include <claud/types.h>
+#include <claud/http_api.h>
+#include <claud/cld.h>
+#include <claud/jsmn_utils.h>
+#include <claud/utils.h>
 
 /**
  * Parse the JSON-encoded directory entry description to

@@ -1,7 +1,7 @@
 #ifndef __JSMN_UTILS_H
 #define __JSMN_UTILS_H
 
-#include "jsmn.h"
+#include <claud/jsmn.h>
 
 #ifdef __cplusplus
 }

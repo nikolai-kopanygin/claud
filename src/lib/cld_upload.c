@@ -12,11 +12,11 @@
 #include <sys/mman.h>
 #include <ctype.h>
 
-#include "types.h"
-#include "http_api.h"
-#include "cld.h"
-#include "jsmn_utils.h"
-#include "utils.h"
+#include <claud/types.h>
+#include <claud/http_api.h>
+#include <claud/cld.h>
+#include <claud/jsmn_utils.h>
+#include <claud/utils.h>
 
 static int add_file(struct cld *c,
 		    const char *dst,

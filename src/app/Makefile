@@ -1,6 +1,6 @@
 IDIR := ../../include
 CC := gcc
-CFLAGS := -I$(IDIR) -I/usr/include -ggdb
+CFLAGS := -I$(IDIR) -I/usr/local/include -I/usr/include -ggdb
 
 ODIR := ../../build
 LDIR := ../../lib
@@ -13,7 +13,7 @@ ifeq ($(PREFIX),)
     PREFIX := /usr/local
 endif
 
-_DEPS = types.h utils.h command.h cld.h
+_DEPS = command.h
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 
 _OBJ = main.o command.o
