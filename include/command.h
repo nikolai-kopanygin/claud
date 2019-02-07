@@ -41,7 +41,7 @@ typedef int(cmd_handler_fn)(struct command *cmd);
 
 /** This is a descriptor for the Mail.Ru Cloud command */
 struct command {
-	struct cld *cld;	/**< Cloud ptr */
+	struct cld *cld;		/**< Cloud ptr */
 	cmd_handler_fn *handle;		/**< Handler ptr */
 	char *args[CMD_MAX_ARGS];	/**< Command arguments */
 	size_t nr_args;			/**< Number of command arguments */
@@ -64,9 +64,6 @@ int command_parse(struct command *cmd, char *args[], size_t nr_args);
  * @param cmd - the command descriptor.
  */
 void command_cleanup(struct command *cmd);
-
-int file_stat(struct cld *c, const char *path, struct file_list *finfo);
-void file_list_cleanup(struct file_list *finfo);
 
 #ifdef __cplusplus
 }

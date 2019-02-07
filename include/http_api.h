@@ -41,18 +41,23 @@ struct upload_stream {
 	size_t left;	/**< The amount of data left to be uploaded */
 };
 
+/**
+ * Type of progress to display
+ */
 enum progress_type {
   PROGRESS_NONE = 0,  /* NONE must stay at 0 */
   PROGRESS_STARTED,
   PROGRESS_DONE
 };
 
-/* to initialize zero out the struct then set session */
+/**
+ * To initialize zero out the struct then set session
+ */
 struct progress_data {
-  CURL *session;             /* curl easy_handle to the calling session */
-  int percent;               /* last percent output to stderr */
-  time_t time;               /* last time progress was output to stderr */
-  enum progress_type type;
+  CURL *session;             /**< curl easy_handle to the calling session */
+  int percent;               /**< last percent output to stderr */
+  time_t time;               /**< last time progress was output to stderr */
+  enum progress_type type;   /**< progress type */
 };
 
 void memory_struct_init(struct memory_struct *mem);

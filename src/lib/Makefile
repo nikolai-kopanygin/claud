@@ -42,7 +42,9 @@ install: $(TARGET_LIB)
 	install -m 644 $(TARGET_LIB) $(DESTDIR)$(PREFIX)/lib/
 	ldconfig
 	install -d $(DESTDIR)$(PREFIX)/include/claud/
-	install -m 644 $(DEPS) $(DESTDIR)$(PREFIX)/include/claud/
+	install -m 644 $(IDIR)/types.h $(DESTDIR)$(PREFIX)/include/claud/
+	install -m 644 $(IDIR)/utils.h $(DESTDIR)$(PREFIX)/include/claud/
+	install -m 644 $(IDIR)/cld.h $(DESTDIR)$(PREFIX)/include/claud/
 
 uninstall:
 	rm -f $(DESTDIR)$(PREFIX)/lib/$(LIBNAME)

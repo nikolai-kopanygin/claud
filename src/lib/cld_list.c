@@ -16,41 +16,6 @@
 #include "jsmn_utils.h"
 #include "utils.h"
 
-static int print_file_list_item(struct list_item *li)
-{
-	struct tm tm = { 0 };
-	char time_str[80];
-
-	if (!li)
-		return 1;
-	
-	if (!gmtime_r(&li->mtime, &tm)) {
-		log_error("Wrong time format\n");
-		return 1;
-	}
-
-	if (!strftime(time_str, sizeof(time_str), "%F %T", &tm)) {
-		log_error("Wrong time format\n");
-		return 1;
-	}	
-	
-	printf("%-6s %11ld %-12s %-20s\n",
-		li->kind,
-		li->size,
-		time_str,
-		li->name);
-	return 0;
-}
-
-static int print_file_list(struct file_list *finfo)
-{
-	size_t i;
-	for (i = 0; i < finfo->body.nr_list_items; i++)
-		if (print_file_list_item(&finfo->body.list[i]))
-			return 1;
-	return 0;	
-}
-
 /**
  * Parse the JSON-encoded directory entry description to
  * the specified list_item structure.
@@ -123,7 +88,7 @@ static int parse_file_list(const char *js, jsmntok_t *tok,
  * @param finfo - a pointer to the file_list struture.
  * @result 0 for success, or error code.
  */
-static int get_file_list(struct cld *c, const char *path, struct file_list *finfo)
+int cld_get_file_list(struct cld *c, const char *path, struct file_list *finfo)
 {
 	int res;
 	jsmn_parser p;
@@ -162,19 +127,6 @@ static int get_file_list(struct cld *c, const char *path, struct file_list *finf
 
 	free(tok);
 	memory_struct_cleanup(&chunk);
-	return res;
-}
-
-int cld_print_file_list(struct cld *c, const char *path)
-{
-	int res;
-	struct file_list finfo = { 0 };
-	if (get_file_list(c, path, &finfo)) {
-		log_error("Could not read file list\n");
-		return 1;
-	}
-	res = print_file_list(&finfo);
-	cld_file_list_cleanup(&finfo);
 	return res;
 }
 
