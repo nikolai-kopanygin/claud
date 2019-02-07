@@ -2,9 +2,9 @@
 #include <malloc.h>
 #include <string.h>
 #include <curl/curl.h>
-#include "types.h"
-#include "utils.h"
-#include "http_api.h"
+#include <claud/types.h>
+#include <claud/utils.h>
+#include <claud/http_api.h>
 
 void memory_struct_init(struct memory_struct *mem) {
 	mem->memory = malloc(1);

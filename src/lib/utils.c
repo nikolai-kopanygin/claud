@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <ctype.h>
-#include "utils.h"
+#include <claud/utils.h>
 
 /**
  * Maximum log level of messages to be shown.

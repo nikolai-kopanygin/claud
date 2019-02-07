@@ -9,11 +9,11 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#include "types.h"
-#include "http_api.h"
-#include "cld.h"
-#include "jsmn_utils.h"
-#include "utils.h"
+#include <claud/types.h>
+#include <claud/http_api.h>
+#include <claud/cld.h>
+#include <claud/jsmn_utils.h>
+#include <claud/utils.h>
 
 int cld_get_part(struct cld *c, int fd, const char *src)
 {

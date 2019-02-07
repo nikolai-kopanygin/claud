@@ -1,11 +1,11 @@
 #include <malloc.h>
 #include <string.h>
 #include <curl/curl.h>
-#include "types.h"
-#include "http_api.h"
-#include "cld.h"
-#include "jsmn_utils.h"
-#include "utils.h"
+#include <claud/types.h>
+#include <claud/http_api.h>
+#include <claud/cld.h>
+#include <claud/jsmn_utils.h>
+#include <claud/utils.h>
 
 static void shard_item_cleanup(struct shard_item *item)
 {

@@ -2,12 +2,12 @@
 #include <malloc.h>
 #include <string.h>
 #include <curl/curl.h>
-#include "types.h"
-#include "http_api.h"
-#include "cld.h"
-#include "utils.h"
+#include <claud/types.h>
+#include <claud/http_api.h>
+#include <claud/cld.h>
+#include <claud/utils.h>
 
-#define COOKIE_FILE "/tmp/cookies.txt"
+#define COOKIE_FILE "/tmp/claud_cookies.txt"
 #define LOGIN_URL "https://auth.mail.ru/cgi-bin/auth"
 #define SDC_URL "https://auth.mail.ru/sdc?from=https://cloud.mail.ru/home"
 
