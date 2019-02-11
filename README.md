@@ -13,6 +13,11 @@ For Debian-bases distributions, you can install it like this:
 
     sudo apt install libcurl-dev
 
+To build documentation, doxygen and graphviz are needed. On Debian-based distributions,
+You can install these tools using the following command:
+
+    sudo apt install doxygen graphviz
+
 # Installation & Usage
 
     git clone https://github.com/nikolai-kopanygin/claud
@@ -22,6 +27,10 @@ For Debian-bases distributions, you can install it like this:
     export MAILRU_USER=<your mail.ru username>
     export MAILRU_PASSWORD=<your mail.ru password>
     claud --help
+
+# Building documentation
+
+    make doc
 
 # Uninstall
 
