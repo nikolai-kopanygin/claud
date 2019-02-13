@@ -75,7 +75,7 @@ static int parse_shard_info(const char *js, jsmntok_t *tok, struct shard_info *s
 		return 1;
 	}
 	s->time = (time_t)get_json_int64_by_name(js, tok, count, "time");
-	s->status = (time_t)get_json_int_by_name(js, tok, count, "status");
+	s->status = get_json_int_by_name(js, tok, count, "status");
 	body = find_json_element_by_name(js, tok, count, JSMN_OBJECT, "body");
 	if (!body) {
 		log_error("Wrongly formatted shard info\n");
@@ -135,7 +135,7 @@ int cld_get_shard_info(struct cld *c)
 	/* Prepare parser */
 	jsmn_init(&p);
 
-	tok = parse_json(&p,chunk.memory, chunk.size, &tokcount);
+	tok = parse_json(&p, chunk.memory, chunk.size, &tokcount);
 	if (!tok) {
 		printf("Could not parse JSON\n");
 		chunk.memory[chunk.size - 1] = 0;
