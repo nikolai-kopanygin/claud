@@ -124,7 +124,7 @@ char *trimwhitespace(char *str)
 }
 
 /**
- * Extract the basename of  file from its pathname
+ * Extract the basename of file from its pathname
  * and copy it to a newly allocated string.
  * @param pathname - the file pathname;
  * @return the basename string, or NULL if allocation failed.
@@ -139,4 +139,41 @@ char *copy_basename(const char *pathname)
 	free(tmp);
 	
 	return filename;
+}
+
+/**
+ * Extract the dirname of file from its pathname
+ * and copy it to a newly allocated string.
+ * @param pathname - the file pathname;
+ * @return the dirname string, or NULL if allocation failed.
+ */
+char *copy_dirname(const char *pathname)
+{
+	char *filename;
+	char *tmp = strdup(pathname);
+	if (!tmp)
+		return NULL;
+	filename = strdup(dirname(tmp));
+	free(tmp);
+	
+	return filename;
+}
+
+/**
+ * Fill the string of a specified length with random
+ * alphanumeric data.
+ * @param s - the pointer to the string;
+ * @param len - the length of the string.
+ */
+void fill_random(char *s, const size_t len) {
+	static const char alphanum[] =
+		"0123456789"
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+		"abcdefghijklmnopqrstuvwxyz";
+	size_t i = 0;
+
+	for (; i < len - 1; i++)
+		s[i] = alphanum[rand() % (sizeof(alphanum) - 1)];
+
+	s[len - 1] = 0;
 }

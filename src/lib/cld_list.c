@@ -23,7 +23,6 @@
  * @param tok - the JSON element of the directory entry;
  * @param count - the number of elements in the JSON subtree;
  * @param li - a pointer to the list_item struture.
- * @return Nothing
  */
 static void parse_list_item(const char *js, jsmntok_t *tok, size_t count,
 			    struct list_item *li)
@@ -85,7 +84,7 @@ static int parse_file_list(const char *js, jsmntok_t *tok,
  * file_list structure.
  * @param c - the cloud descriptor;
  * @param path - the directory path;
- * @param finfo - a pointer to the file_list struture.
+ * @param finfo - a pointer to the file_list structure.
  * @result 0 for success, or error code.
  */
 int cld_get_file_list(struct cld *c, const char *path, struct file_list *finfo)
@@ -130,6 +129,10 @@ int cld_get_file_list(struct cld *c, const char *path, struct file_list *finfo)
 	return res;
 }
 
+/**
+ * Clean up a list_item structure.
+ * @param li - a pointer to the list_item struture.
+ */
 static void list_item_cleanup(struct list_item *li)
 {
 	free(li->kind);
@@ -137,6 +140,10 @@ static void list_item_cleanup(struct list_item *li)
 	free(li->name);
 }
 
+/**
+ * Clean up a file_list structure.
+ * @param finfo - a pointer to the file_list struture.
+ */
 void cld_file_list_cleanup(struct file_list *finfo)
 {
 	size_t i;
@@ -151,6 +158,14 @@ void cld_file_list_cleanup(struct file_list *finfo)
 	memset(finfo, 0, sizeof(*finfo));
 }
 
+/**
+ * Parse the JSON-encoded file or directory info to
+ * the specified file_list structure.
+ * @param js - the JSON code;
+ * @param tok - the root JSON element;
+ * @param finfo - a pointer to the file_list struture.
+ * @return 0 for success, or error code.
+ */
 static int parse_file_stat(const char *js, jsmntok_t *tok, struct file_list *finfo)
 {
 	jsmntok_t *body;
@@ -171,6 +186,14 @@ static int parse_file_stat(const char *js, jsmntok_t *tok, struct file_list *fin
 	return 0;
 }
 
+/**
+ * Read the file or directory info to the specified
+ * file_list structure.
+ * @param c - the cloud descriptor;
+ * @param path - the directory path;
+ * @param finfo - a pointer to the file_list structure.
+ * @result 0 for success, or error code.
+ */
 int cld_file_stat(struct cld *c, const char *path, struct file_list *finfo)
 {
 	int res;
