@@ -23,7 +23,6 @@
  * @param tok - the JSON element of the directory entry;
  * @param count - the number of elements in the JSON subtree;
  * @param li - a pointer to the list_item struture.
- * @return Nothing
  */
 static void parse_list_item(const char *js, jsmntok_t *tok, size_t count,
 			    struct list_item *li)

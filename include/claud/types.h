@@ -2,6 +2,8 @@
 #define __TYPES_H_
 
 #include <curl/curl.h>
+#include <string.h>
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -89,6 +91,12 @@ struct cld *new_cloud(const char *user,
 				const char *domain,
 				int *error);
 void delete_cloud(struct cld *c);
+
+inline static bool file_list_is_dir(const struct file_list *finfo)
+{
+	return finfo && finfo->body.kind &&
+		0 == strcmp(finfo->body.kind, "folder");
+}
 
 #ifdef __cplusplus
 }

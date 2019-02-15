@@ -10,6 +10,12 @@
 #include <claud/jsmn_utils.h>
 #include <claud/utils.h>
 
+/**
+ * Delete a remote file or directory specified by path.
+ * @param c - the cloud descriptor;
+ * @param path - the file or directory path.
+ * @return 0 for success, or error code.
+ */
 int cld_remove(struct cld *c, const char *path)
 {
 	int res;
@@ -18,18 +24,25 @@ int cld_remove(struct cld *c, const char *path)
 	char *url = make_url("file/remove");
 	
 	struct memory_struct chunk;
-	
 	memory_struct_init(&chunk);
+
 	res = post_req(c->curl, &chunk, url, names, values, ARRAY_SIZE(names));
-	free(url);
 	if (res)
 		log_error("command_remove failed, Msg: %.*s\n",
 			(int)chunk.size, chunk.memory);
 	
+	free(url);
 	memory_struct_cleanup(&chunk);
+
 	return res;
 }
 
+/**
+ * Create a remote directory specified by path.
+ * @param c - the cloud descriptor;
+ * @param path - the directory path.
+ * @return 0 for success, or error code.
+ */
 int cld_mkdir(struct cld *c, const char *path)
 {
 	int res;
@@ -38,18 +51,26 @@ int cld_mkdir(struct cld *c, const char *path)
 	char *url = make_url("folder/add");
 	
 	struct memory_struct chunk;
-	
 	memory_struct_init(&chunk);
+
 	res = post_req(c->curl, &chunk, url, names, values, ARRAY_SIZE(names));
-	free(url);
 	if (res)
 		log_error("c_mkdir failed, Msg: %.*s\n",
 			(int)chunk.size, chunk.memory);
 	
+	free(url);
 	memory_struct_cleanup(&chunk);
+
 	return res;
 }
 
+/**
+ * Move a remote file to the specified directory.
+ * @param c - the cloud descriptor;
+ * @param src - the original file path;
+ * @param target_dir - the destination directory path.
+ * @return 0 for success, or error code.
+ */
 static int c_move_a(struct cld *c, const char *src,
 		  const char *target_dir)
 {
@@ -59,13 +80,25 @@ static int c_move_a(struct cld *c, const char *src,
 	const char *values[] =
 		{ c->auth_token, "2", "strict", src, target_dir };
 	char *url = make_url("file/move");
+
+	struct memory_struct chunk;
 	
-	res = post_req(c->curl, NULL, url, names, values, ARRAY_SIZE(names));
+	memory_struct_init(&chunk);
+
+	res = post_req(c->curl, &chunk, url, names, values, ARRAY_SIZE(names));
 	free(url);
 
+	memory_struct_cleanup(&chunk);
 	return res;
 }
 
+/**
+ * Rename a remote file.
+ * @param c - the cloud descriptor;
+ * @param src - the original file path;
+ * @param target_name - the new file name.
+ * @return 0 for success, or error code.
+ */
 static int c_rename(struct cld *c, const char *src,
 		  const char *target_name)
 {
@@ -75,45 +108,94 @@ static int c_rename(struct cld *c, const char *src,
 	const char *values[] =
 		{ c->auth_token, "2", "strict", src, target_name };
 	char *url = make_url("file/rename");
-	
-	res = post_req(c->curl, NULL, url, names, values, ARRAY_SIZE(names));
+
+	struct memory_struct chunk;
+	memory_struct_init(&chunk);
+
+	res = post_req(c->curl, &chunk, url, names, values, ARRAY_SIZE(names));
+
 	free(url);
+	memory_struct_cleanup(&chunk);
 
 	return res;
 }
 
-//TODO: This must be reworked to distinguish between files and
-// folders in dst path.
+/**
+ * Check whether the specified path is a remote directory.
+ * @param c - the cloud descriptor;
+ * @param path - the file or directory path.
+ * @return true if the path is a directory, false otherwise.
+ */
+static bool is_dir(struct cld *c, const char *path) {
+	bool res = false;
+	struct file_list finfo = { 0 };
+	
+	res = !cld_file_stat(c, path, &finfo) && file_list_is_dir(&finfo);
+	
+	cld_file_list_cleanup(&finfo);
+	return res;
+}
+
+/**
+ * Rename a remote source file or directory to the specified
+ * destination path.
+ * If the destination path is an exiting directory, the source
+ * file or directory is moved to that directory.
+ * @param c - the cloud descriptor;
+ * @param src - the source file or directory path;
+ * @param dst - the destination file or directory path.
+ * @return 0 for success, or error code.
+ */
 int cld_move(struct cld *c, const char *src, const char *dst)
 {
 	int res = 0;
-	static const char *tmp_dir = "/__tmrc";
-	char *src_copy = strdup(src);
-	if (!src_copy) {
-		log_error("Could not allocate memory\n");
-		return 1;
-	}
-	char *dst_copy = strdup(dst);
-	if (!dst_copy) {
-		log_error("Could not allocate memory\n");
-		free(src_copy);
-		return 1;
-	}
-	char *src_dir = dirname(src_copy);
-	char *src_base = basename(src_copy);
-	char *dst_dir = dirname(dst_copy);
-	char *dst_base = basename(dst_copy);
+	char tmp_dir[12] = "/tmp";
+	char *src_dir, *src_base, *dst_dir, *dst_base;
 	char *src_tmp = NULL;
 	char *dst_tmp = NULL;
+	
+	src_dir = copy_dirname(src);
+	src_base = copy_basename(src);
 
+	if (is_dir(c, dst)) {
+		dst_dir = strdup(dst);
+		dst_base = strdup(src_base);
+	} else {
+		dst_dir = copy_dirname(dst);
+		dst_base = copy_basename(dst);
+	}
+	
+	printf("src: dir '%s' base '%s'\n", src_dir, src_base);
+	printf("dst: dir '%s' base '%s'\n", dst_dir, dst_base);
+	
+	/* Make up tmp_dir name */
+	fill_random(tmp_dir + strlen(tmp_dir), ARRAY_SIZE(tmp_dir) - strlen(tmp_dir));
+	
+	if (!src_dir || !src_base || !dst_dir || !dst_base) {
+		log_error("Could not allocate memory\n");
+		res = 1;
+		goto cleanup;
+	}
+
+	/* If two directories are the same, just rename */
 	if (!strcmp(src_dir, dst_dir)) {
 		res = c_rename(c, src, dst_base);
 		goto cleanup;
 	}
+	/* If two names are the same, just move */
 	if (!strcmp(src_base, dst_base)) {
 		res = c_move_a(c, src, dst_dir);
 		goto cleanup;
 	}
+	/*
+	 * At first it seemed we could rename the file, then move it, or
+	 * vice versa. But there may be the case when there already is
+	 * a at file src_dir/dst_base or dst_dir/src_base.
+	 * So, to do it safely, we create a temporary directory,
+	 * move our file to there, rename it there, and then move the file
+	 * to the destination directory.
+	 */
+	
 	if (cld_mkdir(c, tmp_dir)) {
 		res = 1;
 		goto cleanup;
@@ -131,10 +213,15 @@ int cld_move(struct cld *c, const char *src, const char *dst)
 	sprintf(src_tmp, "%s/%s", tmp_dir, src_base);
 	sprintf(dst_tmp, "%s/%s", tmp_dir, dst_base);
 	if (c_rename(c, src_tmp, dst_base)) {
+		/* roll back moving */
+		c_move_a(c, src_tmp, src_dir);
 		res = 1;
 		goto rm_tmp_dir;
 	}
 	if (c_move_a(c, dst_tmp, dst_dir)) {
+		/* roll back renaming and moving */
+		c_rename(c, dst_tmp, src_base);
+		c_move_a(c, src_tmp, src_dir);
 		res = 1;
 		goto rm_tmp_dir;
 	}
@@ -145,14 +232,21 @@ rm_tmp_dir:
 cleanup:
 	free(dst_tmp);
 	free(src_tmp);
-	free(dst_copy);
-	free(src_copy);
+	free(dst_dir);
+	free(src_dir);
+	free(dst_base);
+	free(src_base);
 	return res;
 }
 
-// CopyA method is the direct call to api url.
-// It does not support rename. src is full source file path,
-// targetDir is the directory to copy file to.
+/**
+ * Copy a remote file or a directory to another directory,
+ * keeping the original file or directory base name.
+ * @param c - the cloud descriptor;
+ * @param src - the original file or directory path;
+ * @param target_dir - the destination directory.
+ * @return 0 for success, or error code.
+ */
 static int c_copy_a(struct cld *c, const char *src,
 		  const char *target_dir)
 {
@@ -163,40 +257,57 @@ static int c_copy_a(struct cld *c, const char *src,
 		{ c->auth_token, "2", "strict", src, target_dir };
 	char *url = make_url("file/copy");
 	
-	res = post_req(c->curl, NULL, url, names, values, ARRAY_SIZE(names));
+	struct memory_struct chunk;
+	memory_struct_init(&chunk);
+
+	res = post_req(c->curl, &chunk, url, names, values, ARRAY_SIZE(names));
+
 	free(url);
+	memory_struct_cleanup(&chunk);
 
 	return res;
 }
 
-//TODO: This must be reworked to distinguish between files and
-// folders in dst path.
-// Copy is convenient method to move files at the mail.ru cloud.
-// src and dst should be the full source and destination file paths.
+/**
+ * Copy a remote source file or directory to the specified
+ * destination path.
+ * If the destination path is an exiting directory, the source
+ * file or directory is copied to that directory.
+ * @param c - the cloud descriptor;
+ * @param src - the source file or directory path;
+ * @param dst - the destination file or directory path.
+ * @return 0 for success, or error code.
+ */
 int cld_copy(struct cld *c, const char *src, const char *dst)
 {
 	int res = 0;
-	static const char *tmp_dir = "/__tmrc";
-	char *src_copy = strdup(src);
-	if (!src_copy) {
-		log_error("Could not allocate memory\n");
-		return 1;
-	}
-	char *dst_copy = strdup(dst);
-	if (!dst_copy) {
-		log_error("Could not allocate memory\n");
-		free(src_copy);
-		return 1;
-	}
-	char *src_dir = dirname(src_copy);
-	char *src_base = basename(src_copy);
-	char *dst_dir = dirname(dst_copy);
-	char *dst_base = basename(dst_copy);
+	char tmp_dir[12] = "/tmp";
+	char *src_dir, *src_base, *dst_dir, *dst_base;
 	char *src_tmp = NULL;
 	char *dst_tmp = NULL;
 	
+	src_dir = copy_dirname(src);
+	src_base = copy_basename(src);
+
+	if (is_dir(c, dst)) {
+		dst_dir = strdup(dst);
+		dst_base = strdup(src_base);
+	} else {
+		dst_dir = copy_dirname(dst);
+		dst_base = copy_basename(dst);
+	}
+	
 	printf("src: dir '%s' base '%s'\n", src_dir, src_base);
 	printf("dst: dir '%s' base '%s'\n", dst_dir, dst_base);
+	
+	/* Make up tmp_dir name */
+	fill_random(tmp_dir + strlen(tmp_dir), ARRAY_SIZE(tmp_dir) - strlen(tmp_dir));
+
+	if (!src_dir || !src_base || !dst_dir || !dst_base) {
+		log_error("Could not allocate memory\n");
+		res = 1;
+		goto cleanup;
+	}
 
 	if (cld_mkdir(c, tmp_dir)) {
 		res = 1;
@@ -230,8 +341,10 @@ rm_tmp_dir:
 cleanup:
 	free(dst_tmp);
 	free(src_tmp);
-	free(dst_copy);
-	free(src_copy);
+	free(dst_dir);
+	free(src_dir);
+	free(dst_base);
+	free(src_base);
 	return res;
 }
 

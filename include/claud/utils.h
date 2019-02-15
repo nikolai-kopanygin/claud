@@ -71,12 +71,28 @@ int get_log_level();
 char *copy_basename(const char *pathname);
 
 /**
+ * Extract the dirname of file from its pathname
+ * and copy it to a newly allocated string.
+ * @param pathname - the file pathname;
+ * @return the dirname string, or NULL if allocation failed.
+ */
+char *copy_dirname(const char *pathname);
+
+/**
  * Strip whitespace off of both ends of a string.
  * NOTE: the original string is modified.
  * @param str - the string to trim.
  * @return - a pointer to the trimmed string.
  */
 char *trimwhitespace(char *str);
+
+/**
+ * Fill the string of a specified length with random
+ * alphanumeric data.
+ * @param s - the pointer to the string;
+ * @param len - the length of the string.
+ */
+void fill_random(char *s, const size_t len);
 
 #ifdef __cplusplus
 }
