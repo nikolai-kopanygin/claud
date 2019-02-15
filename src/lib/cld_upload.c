@@ -23,7 +23,7 @@ static int add_file(struct cld *c,
 		    const char *hash,
 		    const char *size)
 {
-	printf("dst '%s' hash '%s' size '%s'\n", dst, hash, size);
+	log_debug("dst '%s' hash '%s' size '%s'\n", dst, hash, size);
 	int res;
 	const char *names[] = { "token", "home", "conflict", "hash", "size" };
 	const char *values[] = { c->auth_token, dst, "strict", hash, size };
@@ -74,7 +74,7 @@ static int upload_file_part(struct cld *c, const char *dst, FILE *f,
 	char *s = trimwhitespace(chunk.memory);
 	char *s0 = strrchr(s, '\n');
 	if (!s0) {
-		printf("s0 is NULL\n");
+		log_debug("s0 is NULL\n");
 		s0 = s;
 	} else {
 		s0 += 1;
@@ -85,7 +85,7 @@ static int upload_file_part(struct cld *c, const char *dst, FILE *f,
 	} else {
 		s1 = "";
 	}
-	printf("s0: %s\ns1: %s\n", s0, s1);
+	log_debug("s0: %s\ns1: %s\n", s0, s1);
 	res = add_file(c, dst, s0, s1);
 	
 out_unmap:

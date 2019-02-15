@@ -137,9 +137,9 @@ int cld_get_shard_info(struct cld *c)
 
 	tok = parse_json(&p, chunk.memory, chunk.size, &tokcount);
 	if (!tok) {
-		printf("Could not parse JSON\n");
+		log_error("Could not parse JSON\n");
 		chunk.memory[chunk.size - 1] = 0;
-		printf("%s\n", chunk.memory);
+		log_error("%s\n", chunk.memory);
 		res = 1;
 	} else {
 		res = parse_shard_info(chunk.memory, tok, &s);

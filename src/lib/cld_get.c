@@ -56,7 +56,6 @@ int cld_get(struct cld *c, const char *src, const char *dst)
 {
 	int res;
 	int fd;
-	printf("%s\n%s\n", src, dst);
 	const char *mp_str = ".Multifile-Part";
 	bool mpart = false;
 	struct file_list finfo;

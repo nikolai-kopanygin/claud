@@ -29,7 +29,7 @@ static void print_cookies(CURL *curl)
 	struct curl_slist *nc;
 	int i;
 
-	printf("Cookies, curl knows:\n");
+	log_debug("Cookies, curl knows:\n");
 	res = curl_easy_getinfo(curl, CURLINFO_COOKIELIST, &cookies);
 	if (res != CURLE_OK)
 	{
@@ -40,12 +40,12 @@ static void print_cookies(CURL *curl)
 	nc= cookies, i = 1;
 	while (nc)
 	{
-		printf("[%d]: %s\n", i, nc->data);
+		log_debug("[%d]: %s\n", i, nc->data);
 		nc = nc->next;
 		i++;
 	}
 	if (i == 1)
-		printf("(none)\n");
+		log_debug("(none)\n");
 
 	curl_slist_free_all(cookies);
 }

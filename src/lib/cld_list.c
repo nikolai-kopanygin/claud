@@ -116,9 +116,9 @@ int cld_get_file_list(struct cld *c, const char *path, struct file_list *finfo)
 
 	tok = parse_json(&p, chunk.memory, chunk.size, &tokcount);
 	if (!tok) {
-		printf("Could not parse JSON\n");
+		log_error("Could not parse JSON\n");
 		chunk.memory[chunk.size - 1] = 0;
-		printf("%s\n", chunk.memory);
+		log_error("%s\n", chunk.memory);
 		res = 1;
 	} else {
 		res = parse_file_list(chunk.memory, tok, finfo);
@@ -223,9 +223,9 @@ int cld_file_stat(struct cld *c, const char *path, struct file_list *finfo)
 
 	tok = parse_json(&p, chunk.memory, chunk.size, &tokcount);
 	if (!tok) {
-		printf("Could not parse JSON\n");
+		log_error("Could not parse JSON\n");
 		chunk.memory[chunk.size - 1] = 0;
-		printf("%s\n", chunk.memory);
+		log_error("%s\n", chunk.memory);
 		res = 1;
 	} else {
 		res = parse_file_stat(chunk.memory, tok, finfo);

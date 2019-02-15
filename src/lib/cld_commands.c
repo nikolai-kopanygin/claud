@@ -165,9 +165,6 @@ int cld_move(struct cld *c, const char *src, const char *dst)
 		dst_base = copy_basename(dst);
 	}
 	
-	printf("src: dir '%s' base '%s'\n", src_dir, src_base);
-	printf("dst: dir '%s' base '%s'\n", dst_dir, dst_base);
-	
 	/* Make up tmp_dir name */
 	fill_random(tmp_dir + strlen(tmp_dir), ARRAY_SIZE(tmp_dir) - strlen(tmp_dir));
 	
@@ -297,9 +294,6 @@ int cld_copy(struct cld *c, const char *src, const char *dst)
 		dst_base = copy_basename(dst);
 	}
 	
-	printf("src: dir '%s' base '%s'\n", src_dir, src_base);
-	printf("dst: dir '%s' base '%s'\n", dst_dir, dst_base);
-	
 	/* Make up tmp_dir name */
 	fill_random(tmp_dir + strlen(tmp_dir), ARRAY_SIZE(tmp_dir) - strlen(tmp_dir));
 
@@ -325,7 +319,6 @@ int cld_copy(struct cld *c, const char *src, const char *dst)
 	}
 	sprintf(src_tmp, "%s/%s", tmp_dir, src_base);
 	sprintf(dst_tmp, "%s/%s", tmp_dir, dst_base);
-	printf("src_tmp: '%s'\n dst_tmp '%s'\n", src_tmp, dst_tmp);
 	if (c_rename(c, src_tmp, dst_base)) {
 		res = 1;
 		goto rm_tmp_dir;
