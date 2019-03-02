@@ -79,6 +79,15 @@ char *copy_basename(const char *pathname);
 char *copy_dirname(const char *pathname);
 
 /**
+ * Merge dirname with basename to get the full path to a file.
+ * Allocate a string and put the result in it.
+ * @param dir - the dirname;
+ * @param base - the basename.
+ * @return pointer to allocated string, or NULL for out of memory error.
+ */
+char *join_dir_and_base(const char *dir, const char *base);
+
+/**
  * Strip whitespace off of both ends of a string.
  * NOTE: the original string is modified.
  * @param str - the string to trim.

@@ -160,6 +160,21 @@ char *copy_dirname(const char *pathname)
 }
 
 /**
+ * Merge dirname with basename to get the full path to a file.
+ * Allocate a string and put the result in it.
+ * @param dir - the dirname;
+ * @param base - the basename.
+ * @return pointer to allocated string, or NULL for out of memory error.
+ */
+char *join_dir_and_base(const char *dir, const char *base)
+{
+	char *s = malloc(strlen(dir) + strlen(base) + 2);
+	if (s)
+		sprintf(s, "%s/%s", dir, base);
+	return s;
+}
+
+/**
  * Fill the string of a specified length with random
  * alphanumeric data.
  * @param s - the pointer to the string;
