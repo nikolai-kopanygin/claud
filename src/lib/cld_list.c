@@ -9,12 +9,15 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <regex.h>
 
 #include <claud/types.h>
 #include <claud/http_api.h>
 #include <claud/cld.h>
 #include <claud/jsmn_utils.h>
 #include <claud/utils.h>
+
+static int handle_compounds(struct file_list *contents);
 
 /**
  * Parse the JSON-encoded directory entry description to
@@ -43,7 +46,7 @@ static void parse_list_item(const char *js, jsmntok_t *tok, size_t count,
  * @return 0 for success, or error code.
  */
 static int parse_file_list(const char *js, jsmntok_t *tok,
-			   struct file_list *finfo)
+			   struct file_list *finfo, bool raw)
 {
 	jsmntok_t *body, *list, *t;
 	size_t count, body_count;
@@ -75,6 +78,9 @@ static int parse_file_list(const char *js, jsmntok_t *tok,
 		parse_list_item(js, t, count, &finfo->body.list[i]);
 		t += count;
 	}
+
+	if (!raw)
+		handle_compounds(finfo);
 	
 	return 0;
 }
@@ -85,9 +91,11 @@ static int parse_file_list(const char *js, jsmntok_t *tok,
  * @param c - the cloud descriptor;
  * @param path - the directory path;
  * @param finfo - a pointer to the file_list structure.
+ * @param raw - if true, do not join compound file items.
  * @result 0 for success, or error code.
  */
-int cld_get_file_list(struct cld *c, const char *path, struct file_list *finfo)
+int cld_get_file_list(struct cld *c, const char *path, struct file_list *finfo,
+		      bool raw)
 {
 	int res;
 	jsmn_parser p;
@@ -121,9 +129,9 @@ int cld_get_file_list(struct cld *c, const char *path, struct file_list *finfo)
 		log_error("%s\n", chunk.memory);
 		res = 1;
 	} else {
-		res = parse_file_list(chunk.memory, tok, finfo);
+		res = parse_file_list(chunk.memory, tok, finfo, raw);
 	}
-
+	
 	free(tok);
 	memory_struct_cleanup(&chunk);
 	return res;
@@ -138,6 +146,7 @@ static void list_item_cleanup(struct list_item *li)
 	free(li->kind);
 	free(li->hash);
 	free(li->name);
+	memset(li, 0, sizeof(*li));
 }
 
 /**
@@ -235,3 +244,101 @@ int cld_file_stat(struct cld *c, const char *path, struct file_list *finfo)
 	memory_struct_cleanup(&chunk);
 	return res;
 }
+
+
+/**
+ * Move all non-empty file_items to the beginning of array of file_items.
+ * @param list - pointer to the array;
+ * @nr_items - the number of elements in the array.
+ * @return the number of non-empty file_items.
+ */
+static int compress_file_list(struct list_item *list, size_t nr_items)
+{
+	size_t non_empty_count = 0;
+	size_t i, j;
+	
+	for (i = 0; i < nr_items; i++) {
+		if (list[i].name) {
+			non_empty_count++;
+		} else {
+			for (j = i + 1; j < nr_items; j++) {
+				if (list[j].name) {
+					memcpy(&list[j], &list[i], sizeof(list[i]));
+					memset(&list[i], 0, sizeof(list[i]));
+				}
+			}
+		}
+	}
+	return non_empty_count;
+}
+
+/**
+ * Collapse compounds into regular files with greater size.
+ *
+ * If a file to be uploaded Mail.ru Cloud
+ * is bigger than 2GB (which cloud don't support), then it's split to parts 1, 2, 3 etc.
+ * all 2GB long.
+ *
+ * When such file is downloaded again, all these split files are joined back into one.
+ *
+ * Sample:
+ *  name.mkv 3GB long ===> cloud
+ *                      => name.mkv.Multifile-Part01 2GB long
+ *                      => name.mkv.Multifile-Part02 1GB long
+ *              local <===
+ *  name.mkv 3GB long <=
+ *
+ * @param contents - the directory info
+ * @retun 0 for success, or error code
+ */
+static int handle_compounds(struct file_list *contents)
+{
+	size_t *nr_items_ptr = &contents->body.nr_list_items;
+	size_t nr_items = *nr_items_ptr;
+	struct list_item *list = contents->body.list;
+	regex_t re;
+	regmatch_t matches[4];
+	struct list_item **compounds = NULL; // Array of ptrs to compound list items
+	size_t nr_compounds = 0;
+	size_t i, j;
+
+	if (!(compounds = calloc(nr_items, sizeof(*compounds)))) {
+		log_error("Out of memory\n");
+		return 1;
+	}
+	
+	if (regcomp(&re, "(.+)(\\.Multifile-Part)([[:digit:]]+)", REG_EXTENDED)) {
+		log_error("Failed to compile regex\n");
+		free(compounds);
+		return 1;
+	}
+	
+	for (i = 0; i < nr_items; i++) {
+		char *name = list[i].name;
+		if (!regexec(&re, name, ARRAY_SIZE(matches), matches, 0)
+				&& matches[0].rm_so == 0
+				&& matches[0].rm_eo == strlen(name)) {
+			/* Make the base name a NULL-terminated string */
+			name[matches[1].rm_eo] = '\0';
+
+			/* Look for list item in compounds */
+			for (j = 0; j < nr_compounds; j++)
+				if (!strcmp(name, compounds[j]->name))
+					break;
+
+			if (j == nr_compounds) { /* Not found - a new compound */
+				compounds[j] = &list[i];
+				nr_compounds++;
+			} else { /* Found - add size and remove from list */
+				compounds[j]->size += list[i].size;
+				list_item_cleanup(&list[i]);
+			}
+		}
+	}
+	
+	*nr_items_ptr = compress_file_list(list, nr_items);
+	
+	free(compounds);
+	regfree(&re);
+}
+

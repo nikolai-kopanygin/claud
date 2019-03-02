@@ -57,7 +57,7 @@ static int command_print_file_list(struct command *cmd)
 	int res;
 	const char *path = cmd->args[0];
 	struct file_list finfo = { 0 };
-	if (cld_get_file_list(cmd->cld, path, &finfo)) {
+	if (cld_get_file_list(cmd->cld, path, &finfo, cmd->raw)) {
 		log_error("Could not read file list\n");
 		return 1;
 	}

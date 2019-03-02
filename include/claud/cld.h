@@ -38,7 +38,8 @@ int cld_get_part(struct cld *c, int fd, const char *src);
 int cld_upload(struct cld *c, const char *src, const char *dst);
 int cld_file_stat(struct cld *c, const char *path, struct file_list *finfo);
 void cld_file_list_cleanup(struct file_list *finfo);
-int cld_get_file_list(struct cld *c, const char *path, struct file_list *finfo);
+int cld_get_file_list(struct cld *c, const char *path, struct file_list *finfo,
+		      bool raw);
 
 #ifdef __cplusplus
 }
