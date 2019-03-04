@@ -5,6 +5,7 @@
 #include <stdarg.h>
 #include <ctype.h>
 #include <claud/utils.h>
+#include <claud/types.h>
 
 /**
  * Maximum log level of messages to be shown.
@@ -172,6 +173,38 @@ char *join_dir_and_base(const char *dir, const char *base)
 	if (s)
 		sprintf(s, "%s/%s", dir, base);
 	return s;
+}
+
+/**
+ * Allocate a string big enough to include both the directory name, a slash
+ * and the longest file name in this directory. Copy the directory name to
+ * that string along with a trailing slash.
+ * @param dirname - the directory name;
+ * @param contents - the contents of the directory.
+ * @return the pointer to the allocated string, or NULL for error.
+ */
+char *extend_dirname(const char *dirname, struct file_list *contents)
+{
+	char *full_path;
+	size_t filename_len = 0; /* maximum for this dir */
+	size_t dirname_len = strlen(dirname);
+	size_t i = 0;
+	struct list_item *list = contents->body.list;
+	size_t nr_items = contents->body.nr_list_items;
+
+	for (; i < nr_items; i++)
+		if (filename_len < strlen(list[i].name))
+			filename_len = strlen(list[i].name);
+		
+	if (dirname[dirname_len - 1] == '/')
+		dirname_len -= 1;
+	
+	if ((full_path = malloc(dirname_len + filename_len + 2))) {
+		strncpy(full_path, dirname, dirname_len);
+		strcpy(full_path + dirname_len, "/");
+	}
+	
+	return full_path;
 }
 
 /**

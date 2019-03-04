@@ -9,6 +9,8 @@ extern "C" {
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(*(a)))
 #endif
 
+struct file_list;
+	
 /* Logging */
 
 /**
@@ -86,6 +88,16 @@ char *copy_dirname(const char *pathname);
  * @return pointer to allocated string, or NULL for out of memory error.
  */
 char *join_dir_and_base(const char *dir, const char *base);
+
+/**
+ * Allocate a string big enough to include both the directory name, a slash
+ * and the longest file name in this directory. Copy the directory name to
+ * that string along with a trailing slash.
+ * @param dirname - the directory name;
+ * @param contents - the contents of the directory.
+ * @return the pointer to the allocated string, or NULL for error.
+ */
+char *extend_dirname(const char *dirname, struct file_list *contents);
 
 /**
  * Strip whitespace off of both ends of a string.
