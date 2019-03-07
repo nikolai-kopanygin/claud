@@ -1,3 +1,7 @@
+/**
+ * @file cld_get.c - remote file download implementation.
+ */
+
 #include <curl/curl.h>
 #include <malloc.h>
 #include <string.h>
@@ -52,63 +56,45 @@ int cld_get_part(struct cld *c, int fd, const char *src)
 	return res;
 }
 
+/**
+ * Download a file specified by its remote path @src
+ * to the local path @dst.
+ * Multipart files are supported.
+ * @param c - the cloud client;
+ * @param src - the remote path;
+ * @param dst -the local path.
+ * @return 0 for success, or error code.
+ */
 int cld_get(struct cld *c, const char *src, const char *dst)
 {
-	int res;
+	int res = 0;
 	int fd;
-	const char *mp_str = ".Multifile-Part";
-	bool mpart = false;
-	struct file_list finfo;
-	memset(&finfo, 0, sizeof(finfo));
+	int nr_parts = cld_count_parts(c, src);
 	
-	char *mpbuf = malloc(strlen(src) + strlen(mp_str) + 10);
-	if (!mpbuf) {
-		log_error("Out of memory\n");
+	if (nr_parts < 0)
 		return 1;
-	}
-
-	if ((res = cld_file_stat(c, src, &finfo))) {
-		cld_file_list_cleanup(&finfo);
-		sprintf(mpbuf, "%s%s%02d", src,mp_str, 0);
-		res = cld_file_stat(c, mpbuf, &finfo);
-		mpart = true;
-	}
-	if (res)
-		goto out;
-
+	
 	if ((fd = creat(dst, 0644)) < 0) {
 		log_error("Could not open file to write\n");
-		goto out;
+		return 1;
 	}
 	
-	if (mpart) {
-		int i;
-		for (i = 0;; i++) {
-			cld_file_list_cleanup(&finfo);
-			sprintf(mpbuf, "%s%s%02d", src,mp_str, i);
-			if (!(res = cld_file_stat(c, mpbuf, &finfo))) {
-				if ((res = cld_get_part(c, fd, mpbuf))) {
-					log_error("Could not get file\n");
-					break;
-				}
-				
-			} else {
-				if (i > 0)
-					res = 0;
-				break;
-			}
-			
-		}
-	} else {
+	if (nr_parts == 0) {
 		res = cld_get_part(c, fd, src);
+	} else {
+		int i;
+		for (i = 0; !res && i < nr_parts; i++) {
+			char *name = get_file_part_name(src, i);
+			res = cld_get_part(c, fd, name);
+			free(name);
+		}
 	}
 
-out_close:
 	if (close(fd)) {
 		log_error("Failed to close file\n");
+		res = 1;
 	}
-out:
-	cld_file_list_cleanup(&finfo);	
-	free(mpbuf);
+
+	
 	return res;
 }

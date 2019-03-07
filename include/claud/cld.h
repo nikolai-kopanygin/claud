@@ -40,6 +40,8 @@ int cld_file_stat(struct cld *c, const char *path, struct file_list *finfo);
 void cld_file_list_cleanup(struct file_list *finfo);
 int cld_get_file_list(struct cld *c, const char *path, struct file_list *finfo,
 		      bool raw);
+int cld_share(struct cld *c, const char *path, char **link);
+int cld_count_parts(struct cld *c, const char *path);
 
 #ifdef __cplusplus
 }

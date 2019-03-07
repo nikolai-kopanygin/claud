@@ -17,7 +17,7 @@ endif
 _DEPS = types.h utils.h cld.h http_api.h jsmn.h jsmn_utils.h
 DEPS = $(patsubst %,$(IDIR)/claud/%,$(_DEPS))
 
-_OBJ = utils.o cld_commands.o cld_list.o cld_get.o cld_upload.o \
+_OBJ = utils.o cld_commands.o cld_list.o cld_get.o cld_share.o cld_upload.o \
 cld.o cld_get_shard_info.o jsmn.o jsmn_utils.o http_api.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 

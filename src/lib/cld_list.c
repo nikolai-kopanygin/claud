@@ -10,6 +10,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <regex.h>
+#include <errno.h>
 
 #include <claud/types.h>
 #include <claud/http_api.h>
@@ -302,12 +303,9 @@ static int handle_compounds(struct file_list *contents)
 	size_t nr_compounds = 0;
 	size_t i, j;
 
-	if (!(compounds = calloc(nr_items, sizeof(*compounds)))) {
-		log_error("Out of memory\n");
-		return 1;
-	}
+	compounds = xcalloc(nr_items, sizeof(*compounds));
 	
-	if (regcomp(&re, "(.+)(\\.Multifile-Part)([[:digit:]]+)", REG_EXTENDED)) {
+	if (regcomp(&re, PART_REGEX, REG_EXTENDED)) {
 		log_error("Failed to compile regex\n");
 		free(compounds);
 		return 1;
@@ -342,3 +340,98 @@ static int handle_compounds(struct file_list *contents)
 	regfree(&re);
 }
 
+/**
+ * Check whether name is the name of a partial file for which the
+ * basename is specified.
+ * @param re - regex pointer;
+ * @param basename  -the basename;
+ * @param baselen - the basename length;
+ * @param name - the name to check.
+ * @return number of the part, or -1 if the name is not the part name.
+ */
+inline static int get_part_number(regex_t *re, const char *basename,
+				  size_t baselen, const char *name)
+{
+	regmatch_t m[4];
+	if (!regexec(re, name, ARRAY_SIZE(m), m, 0)
+			&& m[0].rm_so == 0
+			&& m[0].rm_eo == strlen(name)
+			&& m[1].rm_eo - m[1].rm_so == baselen
+			&& !strncmp(basename, name + m[1].rm_so, baselen))
+		return atoi(name + m[3].rm_so);
+	return -1;
+}
+
+/**
+ * If the file is split into parts, count the number of parts,
+ * else return 0 for a single-part file.
+ * @param c - the cloud client;
+ * @param path - the remote file path.
+ * @return the number of parts or a negative error code.
+ */
+int cld_count_parts(struct cld *c, const char *path)
+{
+	int res = -ENOENT;
+	bool is_mpart = true;
+	struct file_list finfo = { 0 };
+	char *dirname = copy_dirname(path);
+	char *basename = copy_basename(path);
+	size_t baselen = strlen(basename);
+	size_t nr_items;
+	struct list_item *list;
+	regex_t re;
+	char *parts = NULL;
+	int i;
+	
+	/* Get raw directory contents */
+	res = cld_get_file_list(c, dirname, &finfo, true);
+	if (res) {
+		log_error("No such directory!\n");
+		goto out_free_names;
+	}
+	
+	nr_items = finfo.body.nr_list_items;
+	list = finfo.body.list;
+	parts = xcalloc(nr_items, sizeof(*parts));
+	
+	if (regcomp(&re, PART_REGEX, REG_EXTENDED)) {
+		log_error("Failed to compile regex\n");
+		res = -EFAULT;
+		goto out_free_parts;
+	}
+
+	for (i = 0; i < nr_items; i++) {
+		int idx;
+		char *name = list[i].name;
+		if(!strcmp(list[i].kind, "folder"))
+			continue;
+		
+		/* Check for single part */
+		if (!strcmp(basename, name)) {
+			is_mpart = false;
+			res = 0;
+			break;
+		}
+		
+		/* Check for multiple parts */
+		idx = get_part_number(&re, basename, baselen, name);
+		if (idx >=0 && idx < nr_items) {
+			parts[idx] = 1;
+			if (idx == 0)
+				res = 0;
+		}
+	}
+	
+	if (res == 0 && is_mpart)
+		while (res < nr_items && parts[res]) res++;
+
+	regfree(&re);
+	
+out_free_parts:
+	free(parts);
+	cld_file_list_cleanup(&finfo);
+out_free_names:
+	free(dirname);
+	free(basename);
+	return res;
+}

@@ -1,6 +1,8 @@
 #ifndef __UTILS_H
 #define __UTILS_H
 
+#include <stdlib.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -107,6 +109,15 @@ char *extend_dirname(const char *dirname, struct file_list *contents);
  */
 char *trimwhitespace(char *str);
 
+
+/**
+ * Create a file part name out of file name and part index.
+ * @param name - the file name;
+ * @part idx - the part index.
+ * @return - a pointer to string containing the part name.
+ */
+char *get_file_part_name(const char *name, int idx);
+
 /**
  * Fill the string of a specified length with random
  * alphanumeric data.
@@ -114,6 +125,84 @@ char *trimwhitespace(char *str);
  * @param len - the length of the string.
  */
 void fill_random(char *s, const size_t len);
+
+/**
+ * Malloc wrapper terminating the program when memory runs up.
+ * @param size - the requested allocation size.
+ * @return the pointer to the allocated memory.
+ */
+inline static void *xmalloc(size_t size)
+{
+	void *ptr = malloc(size);
+	if (!ptr) {
+		log_error("Out of memory\n");
+		exit(1);
+	}
+	return ptr;
+}
+
+/**
+ * Calloc wrapper terminating the program when memory runs up.
+ * @param nmemb - number of elements to allocate;
+ * @param size - the element size.
+ * @return the pointer to the allocated memory.
+ */
+inline static void *xcalloc(size_t nmemb, size_t size)
+{
+	void *ptr = calloc(nmemb, size);
+	if (!ptr) {
+		log_error("Out of memory\n");
+		exit(1);
+	}
+	return ptr;
+}
+
+/**
+ * Realloc wrapper terminating the program when memory runs up.
+ * @param ptr - the pointer to the memory block;
+ * @param size - the requested reallocation size.
+ * @return the pointer to the allocated memory.
+ */
+inline static void *xrealloc(void *ptr, size_t size)
+{
+	void *new_ptr = realloc(ptr, size);
+	if (!new_ptr && size > 0) {
+		log_error("Out of memory\n");
+		exit(1);
+	}
+	return new_ptr;
+}
+
+/**
+ * Strdup wrapper terminating the program when memory runs up.
+ * @param s - the source string to copy.
+ * @return the pointer to the allocated string.
+ */
+inline static char *xstrdup(const char *s)
+{
+	void *new_s = strdup(s);
+	if (!new_s) {
+		log_error("Out of memory\n");
+		exit(1);
+	}
+	return new_s;
+}
+
+/**
+ * Strndup wrapper terminating the program when memory runs up.
+ * @param s - the source string to copy;
+ * @param n - the length of the source string.
+ * @return the pointer to the allocated string.
+ */
+inline static char *xstrndup(const char *s, size_t n)
+{
+	void *new_s = strndup(s, n);
+	if (!new_s) {
+		log_error("Out of memory\n");
+		exit(1);
+	}
+	return new_s;
+}
 
 #ifdef __cplusplus
 }

@@ -101,7 +101,7 @@ int cld_upload(struct cld *c, const char *src, const char *dst)
 	FILE *f;
 	struct stat sb;
 	
-	const char *mp_str = ".Multifile-Part";
+	static const char *mp_str = PART_SUFFIX;
 	char *mpbuf = malloc(strlen(src) + strlen(mp_str) + 10);
 	if (!mpbuf) {
 		log_error("Out of memory\n");

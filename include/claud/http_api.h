@@ -7,7 +7,9 @@
 extern "C" {
 #endif
 
-#define URL_BASE "https://cloud.mail.ru/api/v2/"
+#define CLOUD_ENDPOINT "https://cloud.mail.ru/"
+#define URL_BASE CLOUD_ENDPOINT "api/v2/"
+#define PUBLIC_ENDPOINT CLOUD_ENDPOINT "public/"
 #define USER_AGENT "Mozilla / 5.0(Windows; U; Windows NT 5.1; en - US; rv: 1.9.0.1) Gecko / 2008070208 Firefox / 3.0.1"
 
 /* 128K buffer */
@@ -19,6 +21,15 @@ extern "C" {
  * A PAGE of bytes reserved for form data/fields.
  */
 #define MAX_FILE_SIZE ((1ULL << 31) - sysconf(_SC_PAGE_SIZE))
+
+#ifdef MARCFS_COMPAT
+#define PART_SUFFIX ".marcfs-part-"
+#define PART_FORMAT "%s%s%d"
+#else
+#define PART_SUFFIX ".Multifile-Part"
+#define PART_FORMAT "%s%s%02d"
+#endif
+#define PART_REGEX "(.+)(\\" PART_SUFFIX ")([[:digit:]]+)"
 
 struct CURL;
 

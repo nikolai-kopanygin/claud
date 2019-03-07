@@ -6,6 +6,7 @@
 #include <ctype.h>
 #include <claud/utils.h>
 #include <claud/types.h>
+#include <claud/http_api.h>
 
 /**
  * Maximum log level of messages to be shown.
@@ -128,15 +129,13 @@ char *trimwhitespace(char *str)
  * Extract the basename of file from its pathname
  * and copy it to a newly allocated string.
  * @param pathname - the file pathname;
- * @return the basename string, or NULL if allocation failed.
+ * @return the basename string.
  */
 char *copy_basename(const char *pathname)
 {
 	char *filename;
-	char *tmp = strdup(pathname);
-	if (!tmp)
-		return NULL;
-	filename = strdup(basename(tmp));
+	char *tmp = xstrdup(pathname);
+	filename = xstrdup(basename(tmp));
 	free(tmp);
 	
 	return filename;
@@ -146,17 +145,15 @@ char *copy_basename(const char *pathname)
  * Extract the dirname of file from its pathname
  * and copy it to a newly allocated string.
  * @param pathname - the file pathname;
- * @return the dirname string, or NULL if allocation failed.
+ * @return the dirname string.
  */
 char *copy_dirname(const char *pathname)
 {
 	char *filename;
-	char *tmp = strdup(pathname);
-	if (!tmp)
-		return NULL;
-	filename = strdup(dirname(tmp));
+	char *tmp = xstrdup(pathname);
+	char *dir = dirname(tmp);
+	filename = xstrdup(strcmp(dir, ".") ? dir : "/");
 	free(tmp);
-	
 	return filename;
 }
 
@@ -169,8 +166,10 @@ char *copy_dirname(const char *pathname)
  */
 char *join_dir_and_base(const char *dir, const char *base)
 {
-	char *s = malloc(strlen(dir) + strlen(base) + 2);
-	if (s)
+	char *s = xmalloc(strlen(dir) + strlen(base) + 2);
+	if (dir[0] == '\0' || !strcmp(dir, "/"))
+		strcpy(s, base);
+	else
 		sprintf(s, "%s/%s", dir, base);
 	return s;
 }
@@ -181,7 +180,7 @@ char *join_dir_and_base(const char *dir, const char *base)
  * that string along with a trailing slash.
  * @param dirname - the directory name;
  * @param contents - the contents of the directory.
- * @return the pointer to the allocated string, or NULL for error.
+ * @return the pointer to the allocated string.
  */
 char *extend_dirname(const char *dirname, struct file_list *contents)
 {
@@ -199,10 +198,9 @@ char *extend_dirname(const char *dirname, struct file_list *contents)
 	if (dirname[dirname_len - 1] == '/')
 		dirname_len -= 1;
 	
-	if ((full_path = malloc(dirname_len + filename_len + 2))) {
-		strncpy(full_path, dirname, dirname_len);
-		strcpy(full_path + dirname_len, "/");
-	}
+	full_path = xmalloc(dirname_len + filename_len + 2);
+	strncpy(full_path, dirname, dirname_len);
+	strcpy(full_path + dirname_len, "/");
 	
 	return full_path;
 }
@@ -224,4 +222,31 @@ void fill_random(char *s, const size_t len) {
 		s[i] = alphanum[rand() % (sizeof(alphanum) - 1)];
 
 	s[len - 1] = 0;
+}
+
+/**
+ * Create a file part name out of file name and part index.
+ * @param name - the file name;
+ * @param idx - the part index.
+ * @return - a pointer to string containing the part name.
+ */
+char *get_file_part_name(const char *name, int idx)
+{
+	static const char *sfx = PART_SUFFIX;
+	static const char *fmt = PART_FORMAT;
+	int n = strlen(name) + strlen(sfx) + 3;
+	char *str = NULL;
+	
+	while (1) {
+		char *new_str = xrealloc(str, n);
+		int slen = snprintf(new_str, n, fmt, name, sfx, idx);
+		if (slen < n)
+			/* All OK */
+			return new_str;
+		str = new_str;
+		n = slen + 1;
+	}
+	
+	log_error("We should never come here!\n");
+	exit(1);
 }

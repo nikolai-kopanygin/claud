@@ -105,6 +105,19 @@ static int command_stat(struct command *cmd)
 	return res;
 }
 
+static int command_share(struct command *cmd)
+{
+	int res;
+	char *link;
+	res = cld_share(cmd->cld, cmd->args[0], &link);
+	if (res)
+		log_error("Could not share file link\n");
+	else
+		printf("%s\n", link);
+	free(link);
+	return res;
+}
+
 static int command_remove(struct command *cmd)
 {
 	return cld_remove(cmd->cld, cmd->args[0]);
@@ -235,6 +248,10 @@ int command_parse(struct command *cmd, char *args[], size_t nr_args)
 		cmd->handle = command_mkdir;
 		cmd->nr_args = 1;
 		err = parse_args(cmd, args, nr_args, ERROR_DIR_NOT_SPEC);
+	} else if (!strcmp(op, "share")) {
+		cmd->handle = command_share;
+		cmd->nr_args = 1;
+		err = parse_args(cmd, args, nr_args, ERROR_FILE_DIR_NOT_SPEC);
 	} else if (!strcmp(op, "stat")) {
 		cmd->handle = command_stat;
 		cmd->nr_args = 1;

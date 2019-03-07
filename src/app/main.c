@@ -41,7 +41,7 @@ void help(FILE *f)
 		"  -h, --help                   Print this help message\n"
 		"  -v, --verbose                Level of verbosity (0-3)\n"
 		"\n");
-	fprintf(f, "Commands := < cp | cat | get | ls | mkdir | mv | put | rm | stat >\n\n");
+	fprintf(f, "Commands := < cp | cat | get | ls | mkdir | mv | put | rm | share | stat >\n\n");
 	fprintf(f, "Example: %s ls\n", program_name);
 }
 
