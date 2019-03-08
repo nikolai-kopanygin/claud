@@ -273,6 +273,42 @@ static int compress_file_list(struct list_item *list, size_t nr_items)
 	return non_empty_count;
 }
 
+struct compounds_ctx {
+	struct list_item **compounds;
+	size_t nr_compounds;
+};
+
+
+static char *get_part_basename(regex_t *re, const char *name)
+{
+	regmatch_t m[4];
+	return (!regexec(re, name, ARRAY_SIZE(m), m, 0)
+			&& m[0].rm_so == 0
+			&& m[0].rm_eo == strlen(name))
+		? xstrndup(name, m[1].rm_eo)
+		: NULL;
+}
+
+static void add_to_compounds(struct list_item *item, const char *name,
+			     struct list_item **compounds, size_t *nr_compounds)
+{
+	size_t j;
+
+	/* Look for list item in compounds */
+	for (j = 0; j < *nr_compounds; j++)
+		if (!strcmp(name, compounds[j]->name))
+			break;
+
+	if (j == *nr_compounds) { /* Not found - a new compound */
+		compounds[j] = item;
+		strcpy(compounds[j]->name, name);
+		*nr_compounds++;
+	} else { /* Found - add size and remove from list */
+		compounds[j]->size += item->size;
+		list_item_cleanup(item);
+	}
+}
+
 /**
  * Collapse compounds into regular files with greater size.
  *
@@ -312,25 +348,11 @@ static int handle_compounds(struct file_list *contents)
 	}
 	
 	for (i = 0; i < nr_items; i++) {
-		char *name = list[i].name;
-		if (!regexec(&re, name, ARRAY_SIZE(matches), matches, 0)
-				&& matches[0].rm_so == 0
-				&& matches[0].rm_eo == strlen(name)) {
-			/* Make the base name a NULL-terminated string */
-			name[matches[1].rm_eo] = '\0';
-
-			/* Look for list item in compounds */
-			for (j = 0; j < nr_compounds; j++)
-				if (!strcmp(name, compounds[j]->name))
-					break;
-
-			if (j == nr_compounds) { /* Not found - a new compound */
-				compounds[j] = &list[i];
-				nr_compounds++;
-			} else { /* Found - add size and remove from list */
-				compounds[j]->size += list[i].size;
-				list_item_cleanup(&list[i]);
-			}
+		char *name = get_part_basename(&re, list[i].name);
+		if (name) {
+			add_to_compounds(&list[i], name, compounds,
+					 &nr_compounds);
+			free(name);
 		}
 	}
 	

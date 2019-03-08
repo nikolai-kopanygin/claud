@@ -1,3 +1,7 @@
+/**
+ * @file utils.c - claud utility functions.
+ */
+
 #include <libgen.h>
 #include <string.h>
 #include <stdlib.h>
