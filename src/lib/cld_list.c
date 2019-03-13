@@ -273,12 +273,6 @@ static int compress_file_list(struct list_item *list, size_t nr_items)
 	return non_empty_count;
 }
 
-struct compounds_ctx {
-	struct list_item **compounds;
-	size_t nr_compounds;
-};
-
-
 static char *get_part_basename(regex_t *re, const char *name)
 {
 	regmatch_t m[4];
@@ -302,7 +296,7 @@ static void add_to_compounds(struct list_item *item, const char *name,
 	if (j == *nr_compounds) { /* Not found - a new compound */
 		compounds[j] = item;
 		strcpy(compounds[j]->name, name);
-		*nr_compounds++;
+		(*nr_compounds)++;
 	} else { /* Found - add size and remove from list */
 		compounds[j]->size += item->size;
 		list_item_cleanup(item);
@@ -334,10 +328,9 @@ static int handle_compounds(struct file_list *contents)
 	size_t nr_items = *nr_items_ptr;
 	struct list_item *list = contents->body.list;
 	regex_t re;
-	regmatch_t matches[4];
 	struct list_item **compounds = NULL; // Array of ptrs to compound list items
 	size_t nr_compounds = 0;
-	size_t i, j;
+	size_t i;
 
 	compounds = xcalloc(nr_items, sizeof(*compounds));
 	

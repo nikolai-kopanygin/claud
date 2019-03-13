@@ -1,3 +1,24 @@
+/**
+ * @file types.h
+ * Data types for Mail.Ru Cloud access library.
+ *
+ * Copyright (C) 2019 Nikolai Kopanygin <nikolai.kopanygin@gmail.com>
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
 #ifndef __TYPES_H_
 #define __TYPES_H_
 
@@ -9,7 +30,9 @@
 extern "C" {
 #endif
 
-// AuthToken unmarshal Auth json data.
+/**
+ * AuthToken to unmarshal Auth json data.
+ */
 struct auth_token {
 	struct {
 		char *token;
@@ -18,7 +41,9 @@ struct auth_token {
 
 struct list_item;
 
-// FileList used to unmarshal json information about files in mail.ru cloud.
+/**
+ * FileList used to unmarshal json information about files in mail.ru cloud.
+ */
 struct file_list {
 	char *email;
 	struct {
@@ -45,7 +70,9 @@ struct file_list {
 	} body;
 };
 
-// ListItem used to unmarshal json information about a file.
+/**
+ * ListItem used to unmarshal json information about a file.
+ */
 struct list_item {
 	char *name;
 	int64_t size;
@@ -64,7 +91,9 @@ struct list_item {
 	} count;
 };
 
-// ShardItem holds information for a particular "shard".
+/**
+ * ShardItem holds information for a particular "shard".
+ */
 struct shard_item {
 	char *count;
 	char *url;
@@ -75,7 +104,10 @@ struct shard_item_array {
 	struct shard_item *items;
 };
 
-// ShardInfo used to unmarshal json information about "shards" which contain urls for api operations.
+/**
+ * ShardInfo used to unmarshal json information about "shards" which contain
+ * URL's for API operations.
+ */
 struct shard_info {
 	char *email;
 	struct {
@@ -92,6 +124,11 @@ struct cld *new_cloud(const char *user,
 				int *error);
 void delete_cloud(struct cld *c);
 
+/**
+ * Check whether @finfo describes a directory.
+ * @param finfo - the file_list structure.
+ * @return true if @finfo describes a directory, otherwise false.
+ */
 inline static bool file_list_is_dir(const struct file_list *finfo)
 {
 	return finfo && finfo->body.kind &&
