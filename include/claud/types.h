@@ -25,13 +25,14 @@
 #include <curl/curl.h>
 #include <string.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * AuthToken to unmarshal Auth json data.
+ * Struct auth_token to unmarshal Auth json data.
  */
 struct auth_token {
 	struct {
@@ -42,7 +43,7 @@ struct auth_token {
 struct list_item;
 
 /**
- * FileList used to unmarshal json information about files in mail.ru cloud.
+ * Struct file_list used to unmarshal json information about files in mail.ru cloud.
  */
 struct file_list {
 	char *email;
@@ -71,7 +72,7 @@ struct file_list {
 };
 
 /**
- * ListItem used to unmarshal json information about a file.
+ * Struct list_item used to unmarshal json information about a file.
  */
 struct list_item {
 	char *name;
@@ -92,7 +93,7 @@ struct list_item {
 };
 
 /**
- * ShardItem holds information for a particular "shard".
+ * Struct shard_item holds information for a particular "shard".
  */
 struct shard_item {
 	char *count;
@@ -105,7 +106,7 @@ struct shard_item_array {
 };
 
 /**
- * ShardInfo used to unmarshal json information about "shards" which contain
+ * Struct shard_info is used to unmarshal json information about "shards" which contain
  * URL's for API operations.
  */
 struct shard_info {
@@ -113,6 +114,21 @@ struct shard_info {
 	struct {
 		struct shard_item_array upload;
 		struct shard_item_array get;
+	} body;
+	time_t time;
+	int status;
+};
+
+/**
+ * Struct space_info used to unmarshal json information
+ * about total and used storage space.
+ */
+struct space_info {
+	char *email;
+	struct {
+		uint64_t bytes_total;
+		bool overquota;
+		uint64_t bytes_used;
 	} body;
 	time_t time;
 	int status;
@@ -133,6 +149,16 @@ inline static bool file_list_is_dir(const struct file_list *finfo)
 {
 	return finfo && finfo->body.kind &&
 		0 == strcmp(finfo->body.kind, "folder");
+}
+
+/**
+ * Check whether @finfo describes an empty directory.
+ * @param finfo - the file_list structure.
+ * @return true if @finfo describes a empty directory, otherwise false.
+ */
+inline static bool file_list_is_empty(const struct file_list *finfo)
+{
+	return file_list_is_dir(finfo) && finfo->body.nr_list_items == 0;
 }
 
 #ifdef __cplusplus

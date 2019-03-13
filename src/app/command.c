@@ -157,11 +157,21 @@ static int command_copy(struct command *cmd)
 	return cld_copy(cmd->cld, cmd->args[0], cmd->args[1]);
 }
 
+static int command_space(struct command *cmd)
+{
+	struct space_info info = { 0 };
+	int res = cld_df(cmd->cld, &info);
+	printf("Total: %ld bytes\nUsed: %ld bytes\nOverquota: %s\n",
+		info.body.bytes_total, info.body.bytes_used,
+		info.body.overquota ? "true" : "false"
+      	);
+}
+
 static int parse_args(struct command *cmd, char *args[], int nr_args,
 		      const char *msg_few_args)
 {
 	int i = 0;
-	if (nr_args < cmd->nr_args - 1) {
+	if (nr_args <= cmd->nr_args) {
 		log_error("%s", msg_few_args);
 		return 1;
 	}
@@ -275,6 +285,10 @@ int command_parse(struct command *cmd, char *args[], size_t nr_args)
 	} else if (!strcmp(op, "cp")) {
 		cmd->handle = command_copy;
 		cmd->nr_args = 2;
+		err = parse_args(cmd, args, nr_args, ERROR_FEW_ARGS);
+	} else if (!strcmp(op, "df")) {
+		cmd->handle = command_space;
+		cmd->nr_args = 0;
 		err = parse_args(cmd, args, nr_args, ERROR_FEW_ARGS);
 	} else{
 		log_error("%s", ERROR_WRONG_CMD);

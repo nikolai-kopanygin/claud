@@ -20,6 +20,8 @@ int get_json_int_by_name(const char *js, jsmntok_t *t,
 			 size_t count, const char *name);
 char *get_json_string_by_name(const char *js, jsmntok_t *t,
 			      size_t count, const char *name);
+bool get_json_bool_by_name(const char *js, jsmntok_t *t,
+			      size_t count, const char *name);
 
 #ifdef __cplusplus
 }

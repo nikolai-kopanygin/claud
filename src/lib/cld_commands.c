@@ -341,3 +341,78 @@ cleanup:
 	return res;
 }
 
+static int parse_space_info(const char *js, jsmntok_t *tok, struct space_info *info)
+{
+	jsmntok_t *body;
+	size_t count, body_count;
+	
+	count = get_json_element_count(tok);
+/*
+	if (!(info->email = get_json_string_by_name(js, tok, count, "email"))) {
+		log_error("Wrongly formatted space info\n");
+		return 1;
+	}
+*/	
+	info->time = (time_t)get_json_int64_by_name(js, tok, count, "time");
+	info->status = get_json_int_by_name(js, tok, count, "status");
+	body = find_json_element_by_name(js, tok, count, JSMN_OBJECT, "body");
+	if (!body) {
+		log_error("Wrongly formatted space info\n");
+		return 1;
+	}
+	body_count = get_json_element_count(body);
+	info->body.bytes_total = (uint64_t)get_json_int64_by_name(js, body, body_count, "bytes_total");
+	info->body.bytes_used = (uint64_t)get_json_int64_by_name(js, body, body_count, "bytes_used");
+	info->body.overquota = get_json_bool_by_name(js, body, body_count, "overquota");
+	return 0;
+}
+
+/**
+ * Get space info.
+ * @param c - the cloud descriptor;
+ * @param info - pointer to the structure accepting the info.
+ * @return 0 for success, or error code.
+ */
+int cld_df(struct cld *c, struct space_info *info)
+{
+
+	int res;
+	jsmn_parser p;
+	jsmntok_t *tok = NULL;
+	size_t tokcount = 0;
+	struct memory_struct chunk;
+
+	const char *names[] = { "token", "api" };
+	const char *values[] = { c->auth_token, "2" };
+	char *url = make_url_with_params(c->curl, "user/space", names,
+					 values, ARRAY_SIZE(names));
+	if (!url)
+		return 1;
+	
+	memory_struct_init(&chunk);
+	res = get_req(c->curl, &chunk, url);
+	free(url);
+
+	if (res) {
+		log_error("Get failed\n");
+		memory_struct_cleanup(&chunk);
+		return res;
+	}
+
+	/* Prepare parser */
+	jsmn_init(&p);
+
+	tok = parse_json(&p, chunk.memory, chunk.size, &tokcount);
+	if (!tok) {
+		log_error("Could not parse JSON\n");
+		chunk.memory[chunk.size - 1] = 0;
+		log_error("%s\n", chunk.memory);
+		res = 1;
+	} else {
+		res = parse_space_info(chunk.memory, tok, info);
+		free(tok);
+	}
+	
+	memory_struct_cleanup(&chunk);
+	return res;
+}

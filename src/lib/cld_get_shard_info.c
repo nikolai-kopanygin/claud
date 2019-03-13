@@ -129,6 +129,7 @@ int cld_get_shard_info(struct cld *c)
 
 	if (res) {
 		log_error("Get failed\n");
+		memory_struct_cleanup(&chunk);
 		return res;
 	}
 

@@ -133,6 +133,27 @@ int64_t parse_json_int64(const char *js, jsmntok_t *t)
 	return val;
 }
 
+bool parse_json_bool(const char *js, jsmntok_t *t)
+{
+	bool val = false;
+	size_t len;
+	char *buf;
+
+	if (!js || !t)
+		return 0;
+
+	len = (size_t)(t->end - t->start);
+	
+	if (!strncmp("true", js + t->start, len))
+		val = true;
+	else if (!strncmp("false", js + t->start, len))
+		val = false;
+	else
+		log_error("Wrong bool value: %.*s\n", len, js + t->start);
+
+	return val;
+}
+
 char *parse_json_string(const char *js, jsmntok_t *t)
 {
 	if (!js || !t)
@@ -199,3 +220,9 @@ char *get_json_string_by_name(const char *js, jsmntok_t *t,
 		find_json_element_by_name(js, t, count, JSMN_STRING, name));
 }
 
+bool get_json_bool_by_name(const char *js, jsmntok_t *t,
+			      size_t count, const char *name)
+{
+	return parse_json_bool(js,
+		find_json_element_by_name(js, t, count, JSMN_PRIMITIVE, name));
+}
