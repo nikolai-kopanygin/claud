@@ -1,3 +1,24 @@
+/**
+ * @file cld_upload.c - file upload implementation.
+ * Implementation of API for Mail.Ru Cloud access library.
+ *
+ * Copyright (C) 2019 Nikolai Kopanygin <nikolai.kopanygin@gmail.com>
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
 #include <curl/curl.h>
 #include <malloc.h>
 #include <string.h>
@@ -18,6 +39,14 @@
 #include <claud/jsmn_utils.h>
 #include <claud/utils.h>
 
+/**
+ * Add the metadata of a file to the remote file storage.
+ * @param c - the cloud descriptor;
+ * @param dst - the remote file path;
+ * @param hash - the hash of the file contents;
+ * @param size - the file size.
+ * @return 0 for success, or error code.
+ */
 static int add_file(struct cld *c,
 		    const char *dst,
 		    const char *hash,
@@ -43,6 +72,15 @@ static int add_file(struct cld *c,
 	
 }
 
+/**
+ * Upload a part of a local file to a remote file.
+ * @param c - the cloud descriptor;
+ * @param dst - the remote file path;
+ * @param f - the local file descriptor;
+ * @param length - the size of the file part;
+ * @param part - the number of the file part.
+ * @return 0 for success, or error code.
+ */
 static int upload_file_part(struct cld *c, const char *dst, FILE *f,
 			    size_t length, int part)
 {
@@ -95,6 +133,13 @@ out:
 	return res;
 }
 
+/**
+ * Upload a local file to a remote destination.
+ * @param c - the cloud descriptor;
+ * @param src - source, the local file path.
+ * @param dst - destination, the remote file path.
+ * @return 0 for success, or error code.
+ */
 int cld_upload(struct cld *c, const char *src, const char *dst)
 {
 	int res = 0;
@@ -142,4 +187,16 @@ out_close:
 out:
 	free(mpbuf);
 	return res;
+}
+
+/**
+ * Create an empty file
+ * @param c - the cloud descriptor;
+ * @param path - the file path.
+ * @return 0 for success, or error code.
+ */
+int cld_create(struct cld *c, const char *path)
+{
+	/* add zero file, special hash */
+	return add_file(c, path, "0000000000000000000000000000000000000000", "0");
 }

@@ -1,6 +1,6 @@
 /**
  * @file cld.h
- * Exported functions API for for Mail.Ru Cloud access library.
+ * Exported functions API for Mail.Ru Cloud access library.
  *
  * Copyright (C) 2019 Nikolai Kopanygin <nikolai.kopanygin@gmail.com>
  *
@@ -68,6 +68,7 @@ int cld_get_file_list(struct cld *c, const char *path, struct file_list *finfo,
 int cld_share(struct cld *c, const char *path, char **link);
 int cld_count_parts(struct cld *c, const char *path);
 int cld_df(struct cld *c, struct space_info *info);
+int cld_create(struct cld *c, const char *path);
 
 #ifdef __cplusplus
 }
